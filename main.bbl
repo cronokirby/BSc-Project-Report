@@ -1,9 +1,3 @@
-\begin{thebibliography}{Koc96}
-
-\bibitem[Koc96]{kocher_timing_1996}
-Paul~C Kocher.
-\newblock Timing {Attacks} on {Implementations} of {Diffie}-{Hellman}, {RSA},
-  {DSS}, and {Other} {Systems}.
-\newblock page~10, 1996.
+\begin{thebibliography}{}
 
 \end{thebibliography}

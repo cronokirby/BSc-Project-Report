@@ -24,32 +24,109 @@
 \clearpage
 
 \section{Introduction}
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum a erat non augue vulputate aliquam. Nullam non felis id velit convallis dapibus eu quis risus. Nulla egestas, erat vel hendrerit sagittis, erat urna viverra libero, id ornare massa mauris ac quam. Sed tincidunt pretium lacus, eu hendrerit velit laoreet ut. Morbi mattis vestibulum leo eget imperdiet. Donec id condimentum magna. Nulla cursus facilisis erat. Sed id nulla non tortor venenatis blandit eget sed metus. Vivamus mollis mollis nulla, eu mattis neque tristique a. Nunc risus metus, pharetra nec mollis nec, lacinia vel enim. Cras ut felis nunc. Curabitur felis felis, lobortis in elementum quis, adipiscing in velit.
 
-Sed lectus arcu, consequat eu interdum quis, suscipit nec risus. Fusce magna elit, pretium vel pulvinar sed, pulvinar et leo. Nunc non orci et lacus luctus aliquam eu ac augue. Nunc gravida lectus vitae tortor posuere rhoncus. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis nec diam orci. Praesent nisl dui, fringilla sodales blandit et, bibendum et leo. Nullam molestie, erat nec ultrices tincidunt, eros quam ornare sem, in egestas orci turpis at risus.
+Explain the importance of public-key cryptography, and why big numbers
+are used.
 
-Sed lectus arcu, consequat eu interdum quis, suscipit nec risus. Fusce magna elit, pretium vel pulvinar sed, pulvinar et leo. Nunc non orci et lacus luctus aliquam eu ac augue. Nunc gravida lectus vitae tortor posuere rhoncus. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis nec diam orci. Praesent nisl dui, fringilla sodales blandit et, bibendum et leo. Nullam molestie, erat nec ultrices tincidunt, eros quam ornare sem, in egestas orci turpis at risus.
+Explain why timing leaks are a problem, and that big numbers are hard
+to implement in constant-time.
 
-Sed lectus arcu, consequat eu interdum quis, suscipit nec risus. Fusce magna elit, pretium vel pulvinar sed, pulvinar et leo. Nunc non orci et lacus luctus aliquam eu ac augue. Nunc gravida lectus vitae tortor posuere rhoncus. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis nec diam orci. Praesent nisl dui, fringilla sodales blandit et, bibendum et leo. Nullam molestie, erat nec ultrices tincidunt, eros quam ornare sem, in egestas orci turpis at risus.
-
-See: \cite{kocher_timing_1996}
+Explain what work we've done to address this, and what performance
+results we've gotten.
 
 \section{Background}
+
+Explain the necessary math and concerns that are relevant for our project.
+
 \subsection{Big Numbers in Cryptography}
+
+Explain how Big Numbers are used in Public Key Cryptography. Mention
+DSA, RSA, Elliptic curves.
+
+\subsubsection{Big Numbers in \texttt{go/crypto}}
+
+Explain how things are used in Go's standard library.
+
 \subsection{Side-Channels}
+
+Explain the concept of side-channels in cryptography, and give some of
+the fundamental types we're concerned with.
+
+\subsubsection{Actual Attacks}
+
+Explain how these concerns actually lead to vulnerabilities in systems.
+
 \subsubsection{Our Threat-Model}
-\subsubsection{Vulnerabilities in \texttt{big.Int}}
+
+Explain the threat model we have, and what side-channels we aren't concerned
+about.
+
+\subsection{Vulnerabilities in \texttt{big.Int}}
+
+Explain what vulnerabilities are potentially lurking in bigInt.
+
+\subsubsection{Padding and Truncation}
+
+Explain how big.Int truncates numbers internally.
+
+Explain potential issues with padding in cryptography.
+
+\subsubsection{Leaky Algorithms}
+
+Explain how most algorithms are potentially leaky.
+
+\subsubsection{Mitigations}
+
+Explain what mitigations are deployed in Go.
+
 \section{Implementation}
+
+Describe at a high level what we've done.
+
+\subsection{Strategies for numbers in Cryptography}
+
+Describe different strategies in place for providing numbers for
+Cryptography.
+
 \subsection{The \texttt{safenum} library}
+
+Describe at a high level what the library provides.
+
 \subsubsection{Handling Size}
+
+Describe how we handle sizing of numbers.
+
 \subsection{Some Basic Techniques}
+
+Describe some basic techniques for constant-time operation.
+
 \subsection{Some Algorithm Choices}
+
+Describe the algorithm choices we've used for different things.
+
 \section{Results}
+
+Describe what results we've managed to perform.
+
 \subsection{Comparison with \texttt{big.Int}}
+
+Describe the final performance results we've managed to achieve.
+
 \subsection{Comparison with \texttt{go/crypto}}
+
+Describe the benchmarks on actual code.
+
 \section{Further Work}
+
 \subsection{Upstreaming to \texttt{go/crypto}}
+
+Describe our work in providing a patch for RSA, and what results we've
+managed to achieve.
+
 \section{Conclusion}
+
+Summarize the things we put in the introduction.
+
 \section*{Acknowledgements}
 \addcontentsline{toc}{section}{Acknowledgements}
 
