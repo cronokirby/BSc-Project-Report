@@ -1,3 +1,30 @@
-\begin{thebibliography}{}
+\begin{thebibliography}{1}
+
+\bibitem{go_language}
+The~Go Authors.
+\newblock The go programming language, 2016.
+\newblock URL: \url{https://golang.org/ref/spec}.
+
+\bibitem{ford_proposal_2017}
+Bryan Ford.
+\newblock proposal: math/big: support for constant-time arithmetic {Issue}
+  \#20654 golang/go, 2017.
+\newblock URL: \url{https://github.com/golang/go/issues/20654}.
+
+\bibitem{hellman_overview_1978}
+Martin~E Hellman.
+\newblock An {Overview} of {Public} {Key} {Cryptography}.
+\newblock {\em IEEE COMMUNICATIONS SOCIETY MAGAZINE}, page~9, 1978.
+
+\bibitem{kocher_cryptanalysis_1995}
+Paul~C Kocher.
+\newblock Cryptanalysis of {Di} e-{Hellman}, {RSA}, {DSS}, and {Other}
+  {Systems} {Using} {Timing} {Attacks}.
+\newblock page~6, 1995.
+
+\bibitem{safenum}
+Lúcás~Críostóir Meier.
+\newblock safenum, 2021.
+\newblock URL: \url{https://github.com/cronokirby/safenum}.
 
 \end{thebibliography}

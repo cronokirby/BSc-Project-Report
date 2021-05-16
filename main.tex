@@ -25,14 +25,46 @@
 
 \section{Introduction}
 
-Explain the importance of public-key cryptography, and why big numbers
-are used.
+With the Internet cemented as a principal keystone in communication, and ever
+increasing activity taking place digitially, the importance of secure
+communication and Cryptography has never been greater. Thankfully, after
+50 years of Public Key Cryptography
+\cite{hellman_overview_1978},
+we have good theoretical systems to provide these guarantees.
 
-Explain why timing leaks are a problem, and that big numbers are hard
-to implement in constant-time.
+Most of these systems rely on modular arithmetic with large numbers,
+such as RSA or Elliptic Curve Cryptography (CITATION).
+Working with such numbers is not natively supported by hardware,
+requiring a "Big Number" software library to provide this functionality.
 
-Explain what work we've done to address this, and what performance
-results we've gotten.
+Unfortunately, even though Public Key Cryptosystems have been heavily
+scrutinized \textit{in theory}, in practice many vulnerabilities arise
+in software implementations of these systems.
+
+One particularly pernicious class of vulnerability are
+\textbf{timing attacks}
+\cite{kocher_cryptanalysis_1995}, where an implementation leaks information
+about secret values through its execution time or cache usage, among
+many side-channels.
+
+Libraries for Big Numbers that are not designed with Cryptography in mind
+are pervasively vulnerable to this class of attack.
+
+In particular, Go \cite{go_language} provides a general purpose
+Big Number type, \texttt{big.Int}, which suffers from these vulnerabilities,
+as we detail later in this report. Unfortunately, this library
+gets used for Cryptography
+\cite{ford_proposal_2017}, including inside of Go's own standard library,
+in \texttt{go/crypto}.
+
+We've addressed this issue by creating a library
+\cite{safenum}
+designed to work with Big Numbers in the context of Public Key Cryptography.
+Our library provides the necessary operations for implementing these systems,
+all while avoiding the leakage of secret information.
+To demonstrate its utility, we've modified Go's \texttt{go/crypto}
+package, replacing the use of \texttt{big.Int} in the DSA and RSA
+systems.
 
 \section{Background}
 
@@ -130,6 +162,6 @@ Summarize the things we put in the introduction.
 \section*{Acknowledgements}
 \addcontentsline{toc}{section}{Acknowledgements}
 
-\bibliographystyle{alpha}
+\bibliographystyle{plainurl}
 \bibliography{references}
 \end{document}
