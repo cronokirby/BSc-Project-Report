@@ -116,7 +116,30 @@ cryptosystems, requiring Big Numbers in some form.
 
 \subsubsection{Big Numbers in \texttt{go/crypto}}
 
-Explain how things are used in Go's standard library.
+Go \cite{the_go_authors_go_nodate} provides implementations of numerous
+cryptographic algorithms as part of its standard library,
+including the aforementioned Public Key systems, in the
+\texttt{go/crypto} package.
+
+Unfortunately \cite{ford_proposal_2017}, the general purpose
+\texttt{big.Int} type gets used in this package for Cryptography,
+despite its potential vulnerability to timing attacks.
+
+For DSA \cite{technology_digital_1994}, Go uses \texttt{big.Int}
+for all operations, including key generation, signing, and verification.
+
+For RSA \cite{rivest_method_1978}, Go uses \texttt{big.Int}
+for all operations, and fixes this type as part of the API for
+this package. Key generation, encryption, decryption, signing,
+and verification all use \texttt{big.Int}.
+
+For ECC \cite{miller_use_1986}, Go defines a general interface
+for Elliptic Curves, requiring operations like point addition,
+scalar multiplication, etc. All of these are defined in terms
+of \texttt{big.Int}. Some of the curves have specialized
+implementations of their prime field, only converting from
+\texttt{big.Int} to satisfy the interface curves. The remaining curves
+directly make use \texttt{big.Int} for their field arithmetic.
 
 \subsection{Timing Attacks}
 
