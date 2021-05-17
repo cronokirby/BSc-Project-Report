@@ -1,14 +1,15 @@
 \begin{thebibliography}{1}
 
-\bibitem{go_language}
+\bibitem{the_go_authors_go_nodate}
 The~Go Authors.
-\newblock The go programming language, 2016.
+\newblock The {Go} {Programming} {Language} {Specification} - {The} {Go}
+  {Programming} {Language}.
 \newblock URL: \url{https://golang.org/ref/spec}.
 
 \bibitem{ford_proposal_2017}
 Bryan Ford.
-\newblock proposal: math/big: support for constant-time arithmetic {Issue}
-  \#20654 golang/go, 2017.
+\newblock proposal: math/big: support for constant-time arithmetic - {Issue}
+  \#20654 - golang/go, 2017.
 \newblock URL: \url{https://github.com/golang/go/issues/20654}.
 
 \bibitem{hellman_overview_1978}
@@ -22,9 +23,36 @@ Paul~C Kocher.
   {Systems} {Using} {Timing} {Attacks}.
 \newblock page~6, 1995.
 
-\bibitem{safenum}
+\bibitem{meier_cronokirbysafenum_2021}
 Lúcás~Críostóir Meier.
-\newblock safenum, 2021.
+\newblock cronokirby/safenum, May 2021.
 \newblock URL: \url{https://github.com/cronokirby/safenum}.
+
+\bibitem{miller_use_1986}
+Victor~S. Miller.
+\newblock Use of {Elliptic} {Curves} in {Cryptography}.
+\newblock In Hugh~C. Williams, editor, {\em Advances in {Cryptology} —
+  {CRYPTO} ’85 {Proceedings}}, Lecture {Notes} in {Computer} {Science}, pages
+  417--426, Berlin, Heidelberg, 1986. Springer.
+\newblock \href {https://doi.org/10.1007/3-540-39799-X_31}
+  {\path{doi:10.1007/3-540-39799-X_31}}.
+
+\bibitem{rivest_method_1978}
+R.~L. Rivest, A.~Shamir, and L.~Adleman.
+\newblock A method for obtaining digital signatures and public-key
+  cryptosystems.
+\newblock {\em Communications of the ACM}, 21(2):120--126, February 1978.
+\newblock \href {https://doi.org/10.1145/359340.359342}
+  {\path{doi:10.1145/359340.359342}}.
+
+\bibitem{technology_digital_1994}
+National Institute of Standards~and Technology.
+\newblock Digital {Signature} {Standard} ({DSS}).
+\newblock Technical Report Federal Information Processing Standard (FIPS) 186
+  (Withdrawn), U.S. Department of Commerce, May 1994.
+\newblock URL:
+  \url{https://csrc.nist.gov/publications/detail/fips/186/archive/1994-05-19},
+  \href {https://doi.org/10.6028/NIST.FIPS.186}
+  {\path{doi:10.6028/NIST.FIPS.186}}.
 
 \end{thebibliography}

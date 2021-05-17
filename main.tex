@@ -33,7 +33,9 @@ communication and Cryptography has never been greater. Thankfully, after
 we have good theoretical systems to provide these guarantees.
 
 Most of these systems rely on modular arithmetic with large numbers,
-such as RSA or Elliptic Curve Cryptography (CITATION).
+such as RSA or Elliptic Curve Cryptography
+\cite{rivest_method_1978, miller_use_1986}
+.
 Working with such numbers is not natively supported by hardware,
 requiring a "Big Number" software library to provide this functionality.
 
@@ -50,7 +52,7 @@ many side-channels.
 Libraries for Big Numbers that are not designed with Cryptography in mind
 are pervasively vulnerable to this class of attack.
 
-In particular, Go \cite{go_language} provides a general purpose
+In particular, Go \cite{the_go_authors_go_nodate} provides a general purpose
 Big Number type, \texttt{big.Int}, which suffers from these vulnerabilities,
 as we detail later in this report. Unfortunately, this library
 gets used for Cryptography
@@ -58,7 +60,7 @@ gets used for Cryptography
 in \texttt{go/crypto}.
 
 We've addressed this issue by creating a library
-\cite{safenum}
+\cite{meier_cronokirbysafenum_2021}
 designed to work with Big Numbers in the context of Public Key Cryptography.
 Our library provides the necessary operations for implementing these systems,
 all while avoiding the leakage of secret information.
@@ -68,18 +70,55 @@ systems.
 
 \section{Background}
 
-Explain the necessary math and concerns that are relevant for our project.
+In this section, we explain how Big Numbers are used in Public Key
+Cryptography, what timing attacks are, and how they affect our threat
+model, as well as what kind of side-channels are present in Go's
+\texttt{big.Int} type.
 
 \subsection{Big Numbers in Cryptography}
 
-Explain how Big Numbers are used in Public Key Cryptography. Mention
-DSA, RSA, Elliptic curves.
+As mentioned previously, most Public Key Cryptosystems rely on
+modular arithmetic.
+
+In RSA \cite{rivest_method_1978}, for example, a public key $(e, N)$ consists of modulus
+$N \in \mathbb{N}$, usually 2048 bits long, and an exponent taken
+modulo $\varphi(N)$.
+To encrypt a message $m \in \mathbb{Z}/N\mathbb{Z}$, we calculate
+
+$$
+c := m^e \mod N
+$$
+
+The typical word size on computers is now 64 bits. Because of this,
+to do arithmetic modulo $N$, we need a Big Number library to work
+with these large numbers, as well as to provide optimized implementations
+of opereaitons like modular exponentiation, which aren't natively supported.
+
+DSA
+\cite{technology_digital_1994} also relies on modular arithmetic,
+this time using a large prime $p$ of around 2048 bits, and working
+in the multiplicative group $(\mathbb{Z}/p\mathbb{Z})^*$.
+
+Elliptic Curve Cryptography
+\cite{miller_use_1986} relies on complex formulas for adding points
+on an elliptic curve, built over a finite field $K$. This field
+is usually either a prime field $\mathbb{Z}/p\mathbb{Z}$, in which case arithmetic
+modulo $p$ is used, or a
+binary extension field $\text{GF}(2^n)$, in which case
+binary arithmetic in combination with polynomial addition and multiplication
+are used.
+
+For prime fields, a Big Number library is once again necessary, because
+the size of the prime is greater than 200 bits.
+
+In summary, large modular arithmetic is a cornerstone of Public Key
+cryptosystems, requiring Big Numbers in some form.
 
 \subsubsection{Big Numbers in \texttt{go/crypto}}
 
 Explain how things are used in Go's standard library.
 
-\subsection{Side-Channels}
+\subsection{Timing Attacks}
 
 Explain the concept of side-channels in cryptography, and give some of
 the fundamental types we're concerned with.
