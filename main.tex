@@ -168,7 +168,39 @@ See \cite{ge_survey_2018} for a survey of these vulnerabilities.
 
 \subsubsection{Actual Attacks}
 
-Explain how these concerns actually lead to vulnerabilities in systems.
+The presence of a side-channel does not directly lead to vulnerabilities.
+As early as 1995, Paul Kocher
+demonstrated the potential for timing attacks against cryptographic
+algorithms \cite{kocher_cryptanalysis_1995, kocher_timing_1996}.
+These specific attacks rely on algorithms that perform a varying number of
+operations based on secret data. 
+
+One common objection to timing attacks more generally is that they
+while a timing side-channel is catastrophic in theory, in practice
+this channel is too noisy to exploit. Unfortunately, through gathering
+many samples, it's possible to exploit these attacks even across
+a network \cite{brumley_remote_2005, brumley_remote_2011}.
+
+The use of caches as a potential side-channel was
+identified early on as well \cite{page_theoretical_2002}.
+The idea is that accessing data that is not present in the cache
+takes longer than accessing data inside of the cache. If what data
+is being accessed depends on a secret value, the observed execution
+time will thus also depend on this secret value. If an attacker is located
+on the same machine they can place data into the cache as well, and probe
+the cache themselves, to learn fine-grained information about the
+program's access patterns. While seemingly far-fetched, this is easy
+to achieve now that so many applications are run on cloud computing.
+
+A wide variety of attacks involving caches have been mounted
+against various cryptosystems
+\cite{
+  bernstein_cache-timing_2005,
+  yarom_cachebleed_2017,
+  cabrera_aldaya_cache-timing_2019
+}
+, making accessing data based on secret
+values fraught with peril.
 
 \subsubsection{Our Threat-Model}
 

@@ -6,6 +6,29 @@ The~Go Authors.
   {Programming} {Language}.
 \newblock URL: \url{https://golang.org/ref/spec}.
 
+\bibitem{bernstein_cache-timing_2005}
+Daniel~J Bernstein.
+\newblock Cache-timing attacks on {AES}.
+\newblock page~37, 2005.
+
+\bibitem{brumley_remote_2011}
+Billy~Bob Brumley and Nicola Tuveri.
+\newblock Remote {Timing} {Attacks} {Are} {Still} {Practical}.
+\newblock In Vijay Atluri and Claudia Diaz, editors, {\em Computer {Security}
+  – {ESORICS} 2011}, Lecture {Notes} in {Computer} {Science}, pages 355--371,
+  Berlin, Heidelberg, 2011. Springer.
+\newblock \href {https://doi.org/10.1007/978-3-642-23822-2_20}
+  {\path{doi:10.1007/978-3-642-23822-2_20}}.
+
+\bibitem{brumley_remote_2005}
+David Brumley and Dan Boneh.
+\newblock Remote timing attacks are practical.
+\newblock {\em Computer Networks}, 48(5):701--716, August 2005.
+\newblock URL:
+  \url{http://www.sciencedirect.com/science/article/pii/S1389128605000125},
+  \href {https://doi.org/10.1016/j.comnet.2005.01.010}
+  {\path{doi:10.1016/j.comnet.2005.01.010}}.
+
 \bibitem{ford_proposal_2017}
 Bryan Ford.
 \newblock proposal: math/big: support for constant-time arithmetic - {Issue}
@@ -38,9 +61,15 @@ John Kelsey, Bruce Schneier, David Wagner, and Chris Hall.
 
 \bibitem{kocher_cryptanalysis_1995}
 Paul~C Kocher.
-\newblock Cryptanalysis of {Di} e-{Hellman}, {RSA}, {DSS}, and {Other}
+\newblock Cryptanalysis of {Diffie}-{Hellman}, {RSA}, {DSS}, and {Other}
   {Systems} {Using} {Timing} {Attacks}.
 \newblock page~6, 1995.
+
+\bibitem{kocher_timing_1996}
+Paul~C Kocher.
+\newblock Timing {Attacks} on {Implementations} of {Diffie}-{Hellman}, {RSA},
+  {DSS}, and {Other} {Systems}.
+\newblock page~10, 1996.
 
 \bibitem{meier_cronokirbysafenum_2021}
 Lúcás~Críostóir Meier.
@@ -55,6 +84,12 @@ Victor~S. Miller.
   417--426, Berlin, Heidelberg, 1986. Springer.
 \newblock \href {https://doi.org/10.1007/3-540-39799-X_31}
   {\path{doi:10.1007/3-540-39799-X_31}}.
+
+\bibitem{page_theoretical_2002}
+D.~Page.
+\newblock {\em Theoretical {Use} of {Cache} {Memory} as a {Cryptanalytic}
+  {Side}-{Channel}}.
+\newblock 2002.
 
 \bibitem{rivest_method_1978}
 R.~L. Rivest, A.~Shamir, and L.~Adleman.
@@ -73,5 +108,11 @@ National Institute of Standards~and Technology.
   \url{https://csrc.nist.gov/publications/detail/fips/186/archive/1994-05-19},
   \href {https://doi.org/10.6028/NIST.FIPS.186}
   {\path{doi:10.6028/NIST.FIPS.186}}.
+
+\bibitem{yarom_cachebleed_2017}
+Yuval Yarom, Daniel Genkin, and Nadia Heninger.
+\newblock {CacheBleed}: {A} {Timing} {Attack} on {OpenSSL} {Constant} {Time}
+  {RSA}.
+\newblock page~21, 2017.
 
 \end{thebibliography}

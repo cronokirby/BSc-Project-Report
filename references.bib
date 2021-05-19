@@ -465,7 +465,7 @@
 }
 
 @article{kocher_cryptanalysis_1995,
-	title = {Cryptanalysis of {Di} e-{Hellman}, {RSA}, {DSS}, and {Other} {Systems} {Using} {Timing} {Attacks}},
+	title = {Cryptanalysis of {Diffie}-{Hellman}, {RSA}, {DSS}, and {Other} {Systems} {Using} {Timing} {Attacks}},
 	abstract = {Cryptosystems often take slightly di erent amounts of time to process di erent messages. With network-based cryptosystems, cryptographic tokens, and many other applications, attackers can measure the amount of time used to complete cryptographic operations. This abstract shows that timing channels can, and often do, leak key material. The attacks are particularly alarming because they often require only known ciphertext, work even if timing measurements are somewhat inaccurate, are computationally easy, and are di cult to detect. This preliminary draft outlines attacks that can nd secret exponents in Di e-Hellman key exchange, factor RSA keys, and nd DSS secret parameters. Other symmetric and asymmetric cryptographic functions are also at risk. A complete description of the attack will be presented in a full paper, to be released later. I conclude by noting that closing timing channels is often more di cult than might be expected.},
 	language = {en},
 	author = {Kocher, Paul C},
@@ -597,4 +597,22 @@
 	keywords = {cryptanalysis, product ciphers, side channels, timing attacks},
 	pages = {97--110},
 	file = {Springer Full Text PDF:/home/lucas/archive/Zotero/storage/F4VWNJKY/Kelsey et al. - 1998 - Side channel cryptanalysis of product ciphers.pdf:application/pdf},
+}
+
+@inproceedings{brumley_remote_2011,
+	address = {Berlin, Heidelberg},
+	series = {Lecture {Notes} in {Computer} {Science}},
+	title = {Remote {Timing} {Attacks} {Are} {Still} {Practical}},
+	isbn = {978-3-642-23822-2},
+	doi = {10.1007/978-3-642-23822-2_20},
+	abstract = {For over two decades, timing attacks have been an active area of research within applied cryptography. These attacks exploit cryptosystem or protocol implementations that do not run in constant time. When implementing an elliptic curve cryptosystem with a goal to provide side-channel resistance, the scalar multiplication routine is a critical component. In such instances, one attractive method often suggested in the literature is Montgomery’s ladder that performs a fixed sequence of curve and field operations. This paper describes a timing attack vulnerability in OpenSSL’s ladder implementation for curves over binary fields. We use this vulnerability to steal the private key of a TLS server where the server authenticates with ECDSA signatures. Using the timing of the exchanged messages, the messages themselves, and the signatures, we mount a lattice attack that recovers the private key. Finally, we describe and implement an effective countermeasure.},
+	language = {en},
+	booktitle = {Computer {Security} – {ESORICS} 2011},
+	publisher = {Springer},
+	author = {Brumley, Billy Bob and Tuveri, Nicola},
+	editor = {Atluri, Vijay and Diaz, Claudia},
+	year = {2011},
+	keywords = {elliptic curve cryptography, lattice attacks, Side-channel attacks, timing attacks},
+	pages = {355--371},
+	file = {Springer Full Text PDF:/home/lucas/archive/Zotero/storage/ZY7JPZTT/Brumley and Tuveri - 2011 - Remote Timing Attacks Are Still Practical.pdf:application/pdf},
 }
