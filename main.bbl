@@ -1,4 +1,4 @@
-\begin{thebibliography}{1}
+\begin{thebibliography}{10}
 
 \bibitem{the_go_authors_go_nodate}
 The~Go Authors.
@@ -12,10 +12,29 @@ Bryan Ford.
   \#20654 - golang/go, 2017.
 \newblock URL: \url{https://github.com/golang/go/issues/20654}.
 
+\bibitem{ge_survey_2018}
+Qian Ge, Yuval Yarom, David Cock, and Gernot Heiser.
+\newblock A survey of microarchitectural timing attacks and countermeasures on
+  contemporary hardware.
+\newblock {\em Journal of Cryptographic Engineering}, 8(1):1--27, 2018.
+\newblock URL: \url{http://link.springer.com/10.1007/s13389-016-0141-6}, \href
+  {https://doi.org/10.1007/s13389-016-0141-6}
+  {\path{doi:10.1007/s13389-016-0141-6}}.
+
 \bibitem{hellman_overview_1978}
 Martin~E Hellman.
 \newblock An {Overview} of {Public} {Key} {Cryptography}.
 \newblock {\em IEEE COMMUNICATIONS SOCIETY MAGAZINE}, page~9, 1978.
+
+\bibitem{kelsey_side_1998}
+John Kelsey, Bruce Schneier, David Wagner, and Chris Hall.
+\newblock Side channel cryptanalysis of product ciphers.
+\newblock In Jean-Jacques Quisquater, Yves Deswarte, Catherine Meadows, and
+  Dieter Gollmann, editors, {\em Computer {Security} — {ESORICS} 98}, Lecture
+  {Notes} in {Computer} {Science}, pages 97--110, Berlin, Heidelberg, 1998.
+  Springer.
+\newblock \href {https://doi.org/10.1007/BFb0055858}
+  {\path{doi:10.1007/BFb0055858}}.
 
 \bibitem{kocher_cryptanalysis_1995}
 Paul~C Kocher.
