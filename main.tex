@@ -197,15 +197,70 @@ against various cryptosystems
 \cite{
   bernstein_cache-timing_2005,
   yarom_cachebleed_2017,
-  cabrera_aldaya_cache-timing_2019
-}
+  cabrera_aldaya_cache-timing_2019}
 , making accessing data based on secret
 values fraught with peril.
 
 \subsubsection{Our Threat-Model}
 
-Explain the threat model we have, and what side-channels we aren't concerned
-about.
+Although the variety of potential timing side-channels is quite daunting,
+we can distill them into a simple, albeit pessimistic set of rules:
+
+\begin{enumerate}
+  \item Any loop leaks the number of iterations taken.
+  \item Any memory access leaks the address accessed.
+  \begin{enumerate}
+    \item As a consequence, accessing an array leaks the index accessed.
+  \end{enumerate}
+  \item Any conditional statement leaks which branch was taken.
+\end{enumerate}
+
+Rule 1 is justified by theoretical concerns, since a longer loop
+requires more operations. In practice, it's difficult to observe
+the iterations of each loop in a program from an overall timing signal,
+making this a pessimistic rule.
+
+Rule 2 is justified by various cache based side-channels and attacks
+\cite{
+  bernstein_cache-timing_2005,
+  yarom_cachebleed_2017,
+  cabrera_aldaya_cache-timing_2019}.
+Since caches only load information an entire line at a time, it might
+seem that our rule is too pessimistic, and that only which cache line
+was accessed should be kept secret \cite{brickell_technologies_2011}.
+Unfortunately, the potential for attacks on much finer grained
+level has been demonstrated
+\cite{
+  bernstein_word_2013,
+  osvik_cache_2006,
+  yarom_cachebleed_2017}.
+Because of these concerns, we take a pessimistic position, and assume
+that accessing an array leaks the exact index accessed.
+
+
+Rule 3 is justified in two ways. First, if different branches of a conditional
+statement execute a different number of operations, this leaks information
+about which branch was taken in a fundamental way. Second, even if both
+branches execute identitical operations, the CPU's branch predictor
+can be exploited, leaking information about which branch was taken
+\cite{
+  aciicmez_predicting_2006,
+  aciicmez_power_2007,
+  evtyushkin_jump_2016}.
+
+In addition to these rules, we assume that addition, multiplication,
+logical operations, and shifts, as implemented in hardware,
+are constant-time in their inputs.
+This is the case on most processors, one notable exception being
+microprocessors
+\cite{pornin_bearssl_nodate}. For the platforms which Go,
+and thus our library, targets,
+this assumption is reasonable.
+
+\subsection{Strategies for numbers in Cryptography}
+
+Describe different strategies in place for providing numbers for
+Cryptography.
 
 \subsection{Vulnerabilities in \texttt{big.Int}}
 
@@ -229,11 +284,6 @@ Explain what mitigations are deployed in Go.
 
 Describe at a high level what we've done.
 
-\subsection{Strategies for numbers in Cryptography}
-
-Describe different strategies in place for providing numbers for
-Cryptography.
-
 \subsection{The \texttt{safenum} library}
 
 Describe at a high level what the library provides.
@@ -241,6 +291,10 @@ Describe at a high level what the library provides.
 \subsubsection{Handling Size}
 
 Describe how we handle sizing of numbers.
+
+\subsubsection{Moduli}
+
+Describe how moduli are handled
 
 \subsection{Some Basic Techniques}
 

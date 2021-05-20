@@ -1,5 +1,23 @@
 \begin{thebibliography}{10}
 
+\bibitem{aciicmez_power_2007}
+Onur Aciiçmez, Çetin~Kaya Koç, and Jean-Pierre Seifert.
+\newblock On the power of simple branch prediction analysis.
+\newblock In {\em Proceedings of the 2nd {ACM} symposium on {Information},
+  computer and communications security}, {ASIACCS} '07, pages 312--320, New
+  York, NY, USA, March 2007. Association for Computing Machinery.
+\newblock \href {https://doi.org/10.1145/1229285.1266999}
+  {\path{doi:10.1145/1229285.1266999}}.
+
+\bibitem{aciicmez_predicting_2006}
+Onur Acıiçmez, Çetin~Kaya Koç, and Jean-Pierre Seifert.
+\newblock Predicting {Secret} {Keys} {Via} {Branch} {Prediction}.
+\newblock In Masayuki Abe, editor, {\em Topics in {Cryptology} – {CT}-{RSA}
+  2007}, Lecture {Notes} in {Computer} {Science}, pages 225--242, Berlin,
+  Heidelberg, 2006. Springer.
+\newblock \href {https://doi.org/10.1007/11967668_15}
+  {\path{doi:10.1007/11967668_15}}.
+
 \bibitem{the_go_authors_go_nodate}
 The~Go Authors.
 \newblock The {Go} {Programming} {Language} {Specification} - {The} {Go}
@@ -10,6 +28,18 @@ The~Go Authors.
 Daniel~J Bernstein.
 \newblock Cache-timing attacks on {AES}.
 \newblock page~37, 2005.
+
+\bibitem{bernstein_word_2013}
+Daniel~J Bernstein and Peter Schwabe.
+\newblock A word of warning.
+\newblock In {\em Workshop on {Cryptographic} {Hardware} and {Embedded}
+  {Systems}}, volume~13, 2013.
+
+\bibitem{brickell_technologies_2011}
+Ernie Brickell.
+\newblock Technologies to improve platform security.
+\newblock In {\em Workshop on {Cryptographic} {Hardware} and {Embedded}
+  {Systems}}, volume~11, 2011.
 
 \bibitem{brumley_remote_2011}
 Billy~Bob Brumley and Nicola Tuveri.
@@ -28,6 +58,24 @@ David Brumley and Dan Boneh.
   \url{http://www.sciencedirect.com/science/article/pii/S1389128605000125},
   \href {https://doi.org/10.1016/j.comnet.2005.01.010}
   {\path{doi:10.1016/j.comnet.2005.01.010}}.
+
+\bibitem{cabrera_aldaya_cache-timing_2019}
+Alejandro Cabrera~Aldaya, Cesar Pereida~García, Luis~Manuel Alvarez~Tapia, and
+  Billy~Bob Brumley.
+\newblock Cache-{Timing} {Attacks} on {RSA} {Key} {Generation}.
+\newblock {\em IACR Transactions on Cryptographic Hardware and Embedded
+  Systems}, pages 213--242, August 2019.
+\newblock URL: \url{https://tches.iacr.org/index.php/TCHES/article/view/8350},
+  \href {https://doi.org/10.46586/tches.v2019.i4.213-242}
+  {\path{doi:10.46586/tches.v2019.i4.213-242}}.
+
+\bibitem{evtyushkin_jump_2016}
+Dmitry Evtyushkin, Dmitry Ponomarev, and Nael Abu-Ghazaleh.
+\newblock Jump over {ASLR}: {Attacking} branch predictors to bypass {ASLR}.
+\newblock In {\em 2016 49th {Annual} {IEEE}/{ACM} {International} {Symposium}
+  on {Microarchitecture} ({MICRO})}, pages 1--13, October 2016.
+\newblock \href {https://doi.org/10.1109/MICRO.2016.7783743}
+  {\path{doi:10.1109/MICRO.2016.7783743}}.
 
 \bibitem{ford_proposal_2017}
 Bryan Ford.
@@ -85,11 +133,25 @@ Victor~S. Miller.
 \newblock \href {https://doi.org/10.1007/3-540-39799-X_31}
   {\path{doi:10.1007/3-540-39799-X_31}}.
 
+\bibitem{osvik_cache_2006}
+Dag~Arne Osvik, Adi Shamir, and Eran Tromer.
+\newblock Cache {Attacks} and {Countermeasures}: {The} {Case} of {AES}.
+\newblock In David Pointcheval, editor, {\em Topics in {Cryptology} –
+  {CT}-{RSA} 2006}, Lecture {Notes} in {Computer} {Science}, pages 1--20,
+  Berlin, Heidelberg, 2006. Springer.
+\newblock \href {https://doi.org/10.1007/11605805_1}
+  {\path{doi:10.1007/11605805_1}}.
+
 \bibitem{page_theoretical_2002}
 D.~Page.
 \newblock {\em Theoretical {Use} of {Cache} {Memory} as a {Cryptanalytic}
   {Side}-{Channel}}.
 \newblock 2002.
+
+\bibitem{pornin_bearssl_nodate}
+Thomas Pornin.
+\newblock {BearSSL} - {Constant}-{Time} {Mul}.
+\newblock URL: \url{https://www.bearssl.org/ctmul.html}.
 
 \bibitem{rivest_method_1978}
 R.~L. Rivest, A.~Shamir, and L.~Adleman.
