@@ -5,7 +5,7 @@ FILE=main
 all: $(FILE).pdf
 
 %.pdf: %.tex FORCE
-	latexmk -pdf -f -e '$$pdflatex=q/xelatex %O %S/' $<
+	latexmk -pdf -f -e '$$pdflatex=q/xelatex %O %S/' --shell-escape $<
 
 fast:
 	pdflatex $(FILE)

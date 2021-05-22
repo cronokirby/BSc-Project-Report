@@ -4,7 +4,8 @@
 \usepackage{amssymb, amsmath, array}
 \usepackage{hyperref}
 \usepackage{newpxtext, newpxmath}
-
+\usepackage{minted}
+\usemintedstyle{friendly}
 
 \begin{document}
 
@@ -359,17 +360,106 @@ library.
 
 \subsection{The \texttt{safenum} library}
 
-Describe at a high level what the library provides.
+Safenum defines a \texttt{Nat} type, which is intended to
+replace \texttt{big.Int}. This type represents arbitrary
+numbers in $\mathbb{N}$. Unlike \texttt{big.Int}, we do not handle
+negative numbers. Handling a sign bit in constant-time is exceedingly
+tricky. Thankfully, we haven't found this limitation to be restrictive
+when replacing \texttt{big.Int} in Go's cryptography library.
+
+We provide operations for addition and multiplication of \texttt{Nats},
+all other operations are for modular arithmetic. For modular arithmetic,
+we provide numerous operations, including modular addition, subtraction,
+multiplication, exponentiation, inversion, reduction, and taking
+square roots modulo prime numbers. We also provide the usual operations
+for serializing to and from bytes.
+
+We try and structure the API in a similar way to \texttt{big.Int},
+where an operation is performed on a buffer \texttt{Nat}, which
+can receive the result. For example, this is the signature for
+modular addition:
+
+\begin{minted}{Go}
+func (z *Nat) ModAdd(x *Nat, y *Nat, m *Modulus) *Nat
+\end{minted}
+
+This calculates $z \leftarrow x + y \mod m$, returning $z$. The advantage
+of structuring the API this way, instead of simply returning a new
+value, is that we can reuse the memory of $z$ for the result.
+
+We go one step further, in fact, and use the memory of the buffer
+\texttt{Nat} for all scratch space needed inside of an operation.
+Structuring our operations this way allows us to limit unnecessary waste
+of allocation.
 
 \subsubsection{Handling Size}
 
-Describe how we handle sizing of numbers.
+Unlike \texttt{big.Int}, a \texttt{Nat} doesn't truncate its limbs
+to remove any zero padding. Because of this, we distinguish
+between the \emph{true size} of a number, which is how many significant
+bits or limbs it actually has, and the \emph{announced size}
+of a number, which is how many limbs are actually used to store
+that number. The announced size is allowed to be leaked, while the
+true size should be kept secret. The true size is always
+at most the announced size
+
+Because of this, we need to ensure that there's always a clear
+announced size to use for the results that we produced. For modular
+operations, we have an obvious choice: the size of the modulus.
+When doing a modular operation, the result will always receive
+the same announced size as the modulus does.
+
+For example, when doing modular addition:
+
+\begin{minted}{Go}
+func (z *Nat) ModAdd(x *Nat, y *Nat, m *Modulus) *Nat
+\end{minted}
+
+our result \texttt{z} will have the same announced size as \texttt{m}.
+After modular addition, we have that $z \in [0, m - 1]$ by definition.
+Because of this, leaking the fact that the true size of $z$
+is at most that of $m$ leaks no information about what value $z$
+actually has, beyond what's knowable just by inspecting the call
+graph in the source code of a program.
+
+When serializing a \texttt{Nat}, we respect its announced size,
+and produce zeros for padding as necessary. This is done without
+any special handling, because we already store padded limbs anyways.
+
+Similarly, when deserializing a \texttt{Nat} from bytes,
+we respect any padding, unlike \texttt{big.Int}. For example,
+if 32 big endian bytes are deserialized, we will end up
+with a \texttt{Nat} with an announced size of 256 bits, regardless
+of the value of those bytes.
+
+This leaves us with non-modular addition and multiplication of numbers.
+One approach is to use the maximum possible resulting size for our
+result's announced length. For example, if we multiply
+numbers $x_1$ and $x_2$, of announced size $b_1$ and $b_2$, then
+our result will need a size of at most $b_1 + b_2$.
+In situations where we know that our result will be smaller,
+this size explosion can be undesirable.
+
+Because of this, we opt towards letting users specify exactly how many
+resulting bits they need in the output. For example,
+multiplication has the following signature:
+
+\begin{minted}{Go}
+func (z *Nat) Mul(x *Nat, y *Nat, cap uint) *Nat
+\end{minted}
+
+Here \texttt{cap} is the number of bits that the result should have.
+We use this to determine the result's announced length. Any output
+beyond that capacity will simply be discarded.
+
+In summary, the announced size of a \texttt{Nat} is always
+clear based on how it's produced, and results from deserializing
+a value, from using the same size as a modulus, or from manually
+deciding on an output size.
 
 \subsubsection{Moduli}
 
 Describe how moduli are handled
-
-\subsection{Limbs}
 
 \subsection{Constant-Time Operations}
 
@@ -378,6 +468,12 @@ Describe some basic techniques for constant-time operation.
 \subsection{Algorithm Choices}
 
 Describe the algorithm choices we've used for different things.
+
+\subsection{Implementation Techniques}
+
+\subsubsection{Saturated or Unsatured Limbs}
+
+\subsubsection{Redundant Reductions}
 
 \section{Results}
 
