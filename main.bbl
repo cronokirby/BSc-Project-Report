@@ -124,6 +124,13 @@ Lúcás~Críostóir Meier.
 \newblock cronokirby/safenum, May 2021.
 \newblock URL: \url{https://github.com/cronokirby/safenum}.
 
+\bibitem{merget_raccoon_2019}
+Robert Merget, Marcus Brinkmann, Nimrod Aviram, Juraj Somorovsky, and Johannes
+  Mittmann.
+\newblock Raccoon {Attack}: {Finding} and {Exploiting}
+  {Most}-{Signiﬁcant}-{Bit}-{Oracles} in.
+\newblock page~19, 2019.
+
 \bibitem{miller_use_1986}
 Victor~S. Miller.
 \newblock Use of {Elliptic} {Curves} in {Cryptography}.

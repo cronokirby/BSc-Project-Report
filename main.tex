@@ -112,6 +112,11 @@ the size of the prime is greater than 200 bits.
 In summary, large modular arithmetic is a cornerstone of Public Key
 cryptosystems, requiring Big Numbers in some form.
 
+\subsubsection{Implementing Big Numbers}
+
+Describe different strategies in place for providing numbers for
+Cryptography.
+
 \subsubsection{Big Numbers in \texttt{go/crypto}}
 
 Go \cite{the_go_authors_go_nodate} provides implementations of numerous
@@ -202,6 +207,7 @@ against various cryptosystems
 values fraught with peril.
 
 \subsubsection{Our Threat-Model}
+\label{threat_model}
 
 Although the variety of potential timing side-channels is quite daunting,
 we can distill them into a simple, albeit pessimistic set of rules:
@@ -257,28 +263,86 @@ microprocessors
 and thus our library, targets,
 this assumption is reasonable.
 
-\subsection{Strategies for numbers in Cryptography}
-
-Describe different strategies in place for providing numbers for
-Cryptography.
-
 \subsection{Vulnerabilities in \texttt{big.Int}}
 
-Explain what vulnerabilities are potentially lurking in bigInt.
+Go provides a general purpose type for Big Numbers: \texttt{big.Int}.
+This implementation is concerned with being broadly applicable,
+and well-optimized. It does not focus on security, or on hardening
+itself against timing side-channels.
 
-\subsubsection{Padding and Truncation}
+Unfortunately, its broad applicability makes it useful for cryptography,
+and it gets used throughout Go's standard cryptography library,
+as we've seen previously.
 
-Explain how big.Int truncates numbers internally.
+In this section, we look at some of the important implementation aspects
+of \texttt{big.Int}, and how they might be potentially vulnerable
+according to our threat model.
 
-Explain potential issues with padding in cryptography.
+\subsubsection{Padding}
+
+The \texttt{big.Int} type always normalizes numbers internally,
+removing any leading zero limbs. Even if you initialize a number
+using bytes zero-padded to a certain length, the resulting value
+will immediately chop off these zeros. These extra zeros don't
+change the value of a number. By discarding them, operations on
+this number will have fewer limbs to process, and will be faster.
+
+Unfortunatelly, this means that \texttt{big.Int} leaks information
+about the padding of numbers pervasively. Since every operation on
+a number takes more time the more limbs the number uses,
+the removal of padding leaks the true sizes of numbers
+at every operation.
+Leaking this padding has been exploited
+in OpenSSL \cite{merget_raccoon_2019}, and might potentially
+be a vulnerability in Go's cryptography library, because of \texttt{big.Int}.
 
 \subsubsection{Leaky Algorithms}
 
-Explain how most algorithms are potentially leaky.
+Because \texttt{big.Int} is not written with Cryptography in mind,
+its methods violate the rules set in
+\ref{threat_model}. Many methods take a different number of iterations
+based on their values, branch conditionally on values, and
+access memory depending on values. Because \texttt{big.Int}
+is designed for general purpose use, this problem should only get worse
+as the library is further developed and optimized.
+
+Ultimately, the problem is not the existence of \texttt{big.Int},
+but it's use in Go's cryptography library, and in the broader ecosystem.
 
 \subsubsection{Mitigations}
 
-Explain what mitigations are deployed in Go.
+Although \texttt{big.Int} gets used in Go's cryptography library,
+the authors are aware of its shortcomings, and have implemented
+several mitigations to try and make its timing side-channels harder to
+exploit.
+
+One of the most important ones is a mitigation
+for RSA: blinding \cite{kocher_timing_1996}. The decrypt a ciphertext
+$c = m^e \mod N$, we normally calculate:
+
+$$
+c^d \mod N
+$$
+
+with $d$ our private key, and $(e, N)$ our public key.
+When exponentiation is not implemented in a constant-time way, like
+with \texttt{big.Int}, this process can leak information about $m$.
+If an adversary can choose $c$, then this can leak information about
+$d$ as well.
+
+To mitigate this, instead of decrypting $c$ directly,
+we first generate a random integer
+$r \in [0, N - 1]$, and make sure
+it has an inverse $r^{-1}$ mod $N$. Then we decrypt $r^e \cdot c$.
+This gives us the value $r \cdot m$, and we can recover
+$m$ by multiplying by $r^{-1}$.
+
+While this does effectively mitigate the simplest attacks
+against exponentiation, a very leaky operation, the other operations
+involving these values are still left unprotected, and may
+have exploitable leakages in more subtle ways. We also have
+the unaddressed issue of padding, which has lead to attacks
+in OpenSSL \cite{merget_raccoon_2019}.
 
 \section{Implementation}
 
