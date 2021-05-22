@@ -119,6 +119,12 @@ Paul~C Kocher.
   {DSS}, and {Other} {Systems}.
 \newblock page~10, 1996.
 
+\bibitem{meier_cronokirbyctcrypto_2021}
+Lúcás~Críostóir Meier.
+\newblock cronokirby/ctcrypto, May 2021.
+\newblock original-date: 2021-04-17T14:26:20Z.
+\newblock URL: \url{https://github.com/cronokirby/ctcrypto}.
+
 \bibitem{meier_cronokirbysafenum_2021}
 Lúcás~Críostóir Meier.
 \newblock cronokirby/safenum, May 2021.

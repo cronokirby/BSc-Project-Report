@@ -346,7 +346,16 @@ in OpenSSL \cite{merget_raccoon_2019}.
 
 \section{Implementation}
 
-Describe at a high level what we've done.
+We've implemented a library, called
+\texttt{safenum} \cite{meier_cronokirbysafenum_2021}, intended to provide
+a replacement for \texttt{big.Int}, suitable for use in Cryptography.
+In order to demonstrate its utility, we've replaced some
+of \texttt{go/crypto}'s usage of \texttt{big.Int} with our own library,
+in a separate repository
+\cite{meier_cronokirbyctcrypto_2021}.
+
+In this section, we go over the design and implementation of our
+library.
 
 \subsection{The \texttt{safenum} library}
 
@@ -360,11 +369,13 @@ Describe how we handle sizing of numbers.
 
 Describe how moduli are handled
 
-\subsection{Some Basic Techniques}
+\subsection{Limbs}
+
+\subsection{Constant-Time Operations}
 
 Describe some basic techniques for constant-time operation.
 
-\subsection{Some Algorithm Choices}
+\subsection{Algorithm Choices}
 
 Describe the algorithm choices we've used for different things.
 
