@@ -459,7 +459,40 @@ deciding on an output size.
 
 \subsubsection{Moduli}
 
-Describe how moduli are handled
+In our library, we've decided to make a separate type for representing
+the moduli used in modular arithmetic: \texttt{Modulus}. There are several
+reasons for doing this.
+
+First, various operations in modular arithmetic require different properties
+of the modulus which can be pre-computed. For example, montgomery multiplication
+requires us to know $m^{-1} \mod 2^b$, with $b$ the number of bits in a limb,
+and $m$ our modulus. By using a separate type for moduli, we can
+precompute these values.
+
+Second, the true size of a modulus is considered to be leakable.
+As a consequence, moduli are stored \emph{without} padding.
+This is desirable because modular reduction needs access to the most
+significant bits of a modulus, and fetching this information without
+leaking padding is exceedingly difficult. Furthermore,
+by storing moduli without padding, the announced size of numbers produced
+through modular operations is as tight as possible, which speeds
+up operation.
+
+This assumption is safe in cryptography. Moduli are often public,
+like with the public modulus $N$ in RSA. In this case, leaking
+the true size is fine, since even the exact value is known. There
+are some cases where a secret modulus is necessary. For example,
+when generating an RSA key, we use the factorization $N = pq$ of the modulus,
+and calculate our private key modulo $\varphi(N) := (p - 1)(q - 1)$:
+
+$$
+d := e^{-1} \mod \varphi(N)
+$$
+
+Leaking the value of $\varphi(N)$ would be catastrophic. On the other hand,
+it's clear that the true size of $\varphi(N)$ is approximately
+that of $N$, which is known. In this case, leaking the true size of
+$\varphi(N)$ is fine.
 
 \subsection{Constant-Time Operations}
 
