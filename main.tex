@@ -5,6 +5,7 @@
 \usepackage{hyperref}
 \usepackage{newpxtext, newpxmath}
 \usepackage{minted}
+\usepackage{algorithmic}
 \usemintedstyle{friendly}
 
 \begin{document}
@@ -367,6 +368,20 @@ negative numbers. Handling a sign bit in constant-time is exceedingly
 tricky. Thankfully, we haven't found this limitation to be restrictive
 when replacing \texttt{big.Int} in Go's cryptography library.
 
+We represent numbers in base $W := 2^{64}$. Concretely, we
+store a number as a slice of type \texttt{[]uint}, in little
+endian order. We call these the "limbs" of a number. For example,
+the slice:
+\begin{minted}{Go}
+[]uint{13, 47, 52}
+\end{minted}
+represents the number:
+$$
+52 \cdot 2^{128} + 47 \cdot 2^{64} + 13
+$$
+These limbs might be padded, to conceal the true value of a number,
+as we'll see later.
+
 We provide operations for addition and multiplication of \texttt{Nats},
 all other operations are for modular arithmetic. For modular arithmetic,
 we provide numerous operations, including modular addition, subtraction,
@@ -465,7 +480,7 @@ reasons for doing this.
 
 First, various operations in modular arithmetic require different properties
 of the modulus which can be pre-computed. For example, montgomery multiplication
-requires us to know $m^{-1} \mod 2^b$, with $b$ the number of bits in a limb,
+requires us to know $m^{-1} \mod W$, with $W$ our base,
 and $m$ our modulus. By using a separate type for moduli, we can
 precompute these values.
 
@@ -499,7 +514,147 @@ weaker constraint on its announced size.
 
 \subsection{Constant-Time Operations}
 
-Describe some basic techniques for constant-time operation.
+The rules we established in our threat model \ref{threat_model}
+are quite stringent. For many operations, we want to have conditional
+behavior depending on the values and results we see. Without access
+to branching, this would seem impossible. Thankfully, there are workarounds
+to enable us to have conditional behavior, all while not leaking information
+about which conditions are selected. The core idea here is that whenever
+we're faced with a choice, we perform both branches, and then combine
+the results together without revealing which result we end up using.
+
+For example, an standard algorithm for modular subtraction would look
+like this (in pseudo-Go):
+
+\begin{minted}{Go}
+func (z *Nat) ModSub(x *Nat, y *Nat, m *Modulus) *Nat {
+  borrow := z.Sub(x, y)
+  if borrow == 1 {
+    z.Add(z, m)
+  }
+}
+\end{minted}
+
+The problem here is that by conditionally adding in $m$, we reveal
+whether or not $y > x$, and a borrow occurred. Our solution
+requires a new primitive:
+
+\begin{minted}{Go}
+func (z *Nat) ctCondCopy(v choice, y *Nat) *Nat
+\end{minted}
+
+This function assigns $y$ to $z$ if $v = 1$, and does nothing otherwise.
+Furthermore, this primitive shouldn't leak any information about
+whether or not the condition was true.
+
+With this in place, we can implement modular subtraction without leakage:
+
+\begin{minted}{Go}
+func (z *Nat) ModSub(x *Nat, y *Nat, m *Modulus) *Nat {
+  borrow := z.Sub(x, y)
+  scratch := new(Nat).Add(z, m)
+  z.ctCondCopy(choice(borrow), scratch)
+}
+\end{minted}
+
+We always perform the addition, and copy over the result if necessary,
+without leaking the value of \texttt{borrow}.
+
+This kind of rearrangement is the foundation that allows us to replace
+branching in algorithms with constant-time operations.
+
+\subsubsection{Building Primitives}
+
+The question remains: how do you build up the primitives like
+\texttt{ctCondCopy}, which let you choose results without
+leaking which result was chosen?
+
+The methods for constant-time choice are analagous to the standard
+programming methods for conditional branching. Instead of using
+\texttt{bool} to represent the result of a condition, we use
+
+\begin{minted}{Go}
+type choice Word
+\end{minted}
+
+The value of a choice is either $1$ or $0$, but we use the same
+type as full limbs, to try and avoid having the compiler
+turning or manipulations back into branches.
+
+From this choice value, we can build a primitive that selects
+between two limbs without leaking which choice was selected:
+
+\begin{minted}{Go}
+func ctIfElse(v choice, x, y Word) Word {
+  mask := -Word(v)
+  return y ^ (mask & (y ^ x))
+} 
+\end{minted}
+
+This routine returns $x$ if $v = 1$, and $y$ otherwise. Unlike
+a conditional statement, this is implemented through bitwise operations,
+and doesn't leak information about what was selected.
+
+If $v = 0$, then \texttt{mask} contains only zeros, and we're left
+with \texttt{y}. When \texttt{v == 1},
+then \texttt{mask} only contains ones. The \texttt{y}'s cancel eachother out,
+leaving us with \texttt{x}.
+
+We can use this primitive to build up a larger selection primitive,
+allowing us to assign one slice to another, conditionally:
+
+\begin{minted}{Go}
+func ctCondCopy(v choice, x, y []Word) {
+  for i := 0; i < len(x); i++ {
+    x[i] = ctIfElse(v, y[i], x[i])
+  }
+}
+\end{minted}
+
+These primitives allow us to use \texttt{choice} to introduce conditional
+behavior without leaking our choices, but we also need primitives to
+create \texttt{choice} values in the first place. These are built up
+in a similar way from small primitives to large primitives.
+
+We can decide whether or not two limbs are equal using some bitwise
+trickery:
+
+\begin{minted}{Go}
+func ctEq(x, y Word) choice {
+  q := uint64(x ^ y)
+  return 1 ^ choice((q|-q)>>63)
+}
+\end{minted}
+
+To understand why this trick works, first realize that in two's complement,
+either the most significant bit of a number is set, or the most significant
+bit of a number's negation is set, unless that number is zero.
+Thus, the expression
+\begin{minted}{Go}
+choice((q|-q)>>63)
+\end{minted}
+simply checks, using only bitwise operations, that
+\texttt{q} is not zero.
+Since \texttt{q} is zero precisely when \texttt{x} and \texttt{y}
+are equal, we can simply negate the non-zero check.
+
+We can use this primitive to compare entire slices of limbs
+in constant time:
+
+\begin{minted}{Go}
+func cmpEq(x []Word, y []Word) choice {
+  res := choice(1)
+  for i := 0; i < len(x) && i < len(y); i++ {
+    res &= ctEq(x[i], y[i])
+  }
+  return res
+}
+\end{minted}
+
+We can't exit early, since that would leak information about
+the value of x and y. Instead, we combine all the results together,
+using the fact that two slices are equal when every one of their
+matching limbs are equal.
 
 \subsection{Algorithm Choices}
 
@@ -529,6 +684,8 @@ Describe the benchmarks on actual code.
 
 Describe our work in providing a patch for RSA, and what results we've
 managed to achieve.
+
+\subsection{Optimizing Assembly Routines}
 
 \section{Conclusion}
 
