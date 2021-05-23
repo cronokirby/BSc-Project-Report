@@ -97,6 +97,11 @@ Martin~E Hellman.
 \newblock An {Overview} of {Public} {Key} {Cryptography}.
 \newblock {\em IEEE COMMUNICATIONS SOCIETY MAGAZINE}, page~9, 1978.
 
+\bibitem{hvass_high-assurance_nodate}
+Benjamin~S Hvass, Diego~F Aranha, and Bas Spitters.
+\newblock High-assurance ﬁeld inversion for curve-based cryptography.
+\newblock page~23.
+
 \bibitem{kelsey_side_1998}
 John Kelsey, Bruce Schneier, David Wagner, and Chris Hall.
 \newblock Side channel cryptanalysis of product ciphers.
@@ -170,6 +175,16 @@ Thomas Pornin.
 Thomas Pornin.
 \newblock {BearSSL} - {Big} {Integer} {Design}, 2020.
 \newblock URL: \url{https://www.bearssl.org/bigint.html}.
+
+\bibitem{reparaz_dude_2017}
+Oscar Reparaz, Josep Balasch, and Ingrid Verbauwhede.
+\newblock Dude, is my code constant time?
+\newblock In {\em Design, {Automation} \& {Test} in {Europe} {Conference} \&
+  {Exhibition} ({DATE}), 2017}, pages 1697--1702, Lausanne, Switzerland, March
+  2017. IEEE.
+\newblock URL: \url{http://ieeexplore.ieee.org/document/7927267/}, \href
+  {https://doi.org/10.23919/DATE.2017.7927267}
+  {\path{doi:10.23919/DATE.2017.7927267}}.
 
 \bibitem{rivest_method_1978}
 R.~L. Rivest, A.~Shamir, and L.~Adleman.

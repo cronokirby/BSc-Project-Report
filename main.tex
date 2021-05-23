@@ -116,8 +116,24 @@ cryptosystems, requiring Big Numbers in some form.
 
 \subsubsection{Implementing Big Numbers}
 
-Describe different strategies in place for providing numbers for
-Cryptography.
+When you know the modulus in advance, like for Elliptic Curve Cryptography,
+where prime modulus is part of the system itself, then you
+can implement a library for doing arithmetic with that specific modulus.
+By using a fixed size type, it's easier to provide constant-time operation
+as well.
+
+The downside is that since different systems require different moduli,
+a lot of effort has to be expended to implement and support
+these different systems.
+
+One way to address this is to automatically generate implementations
+of modular arithmetic, as done by FiatCrypto
+\cite{hvass_high-assurance_nodate}.
+
+In some systems, you need support for dynamic moduli. For example,
+in RSA. In this case, you do need a Big Number libary of some kind,
+providing dynamically sized numbers, and a myriad of operations.
+
 
 \subsubsection{Big Numbers in \texttt{go/crypto}}
 
@@ -658,7 +674,6 @@ matching limbs are equal.
 
 \subsection{Algorithm Choices}
 
-Describe the algorithm choices we've used for different things.
 
 \subsection{Implementation Techniques}
 
@@ -828,18 +843,95 @@ but is already an encouraging result.
 
 \section{Further Work}
 
-\subsection{Upstreaming to \texttt{go/crypto}}
+While we're happy with the utility of our library,
+and the performance results we've managed to achieve, it's
+of course still possible to improve on this front.
 
-Describe our work in providing a patch for RSA, and what results we've
-managed to achieve.
+\subsection{Verifying Constant-Time Properties}
+
+Ultimately, we would like to have more assurance about the
+constant-time properties of our library. Our code hasn't
+undergone an audit, nor have we verified the assembly output
+produced by the Go compiler to ensure that it meets our demands.
+
+Ideally, it would be nice to incorporate some kind of automated
+analysis of our code to detect timing side-channels. An approach
+similar to dudect
+\cite{reparaz_dude_2017} 
+might be an interesting way to provide a form of fuzz testing
+to detect unwanted time-variation.
 
 \subsection{Optimizing Assembly Routines}
 
+Currently, we rely on some assembly routines pulled from
+\texttt{big.Int}, slightly modified to avoid jumping to non-constant-time
+routines. Unfortunately, not all of the primitive operations we would
+like to have are present. Furthermore, we could reduce memory usage
+in some places, by having this operations present a "conditional"
+variant. For example, we could have an add operation taking a
+\texttt{choice} flag, allowing us to choose whether or not to perform
+an addition without leaking information. This would avoid having
+to use a scratch buffer and a conditional copy.
+
+To gain similar speed to the other primitives, these new primitives
+would also need to be implemented in assembly. This would be time-consuming,
+but likely worth the effort. There are also new solutions
+to help with writing assembly routines in Go, such as the Avo library.
+
+\subsection{Upstreaming to \texttt{go/crypto}}
+
+While we believe our library is immediately useful for the broader
+ecosystem, it's not realistically going to be replacing
+the use of \texttt{big.Int} in Go's cryptography library any time soon.
+
+The most likely path towards removing \texttt{big.Int} from
+\texttt{go/crypto} is likely to move towards specialized arithmetic
+implementations for each prime field involved in ECC. DSA is a legacy
+algorithm, where the security flaws introduced
+by \texttt{big.Int} are not of major concern.
+
+This leaves RSA. Unfortunately, the nature of RSA, requiring dynamic
+moduli, makes it so that a big number library of some kind is necessary.
+Ideally, this library would be internal to RSA, allowing constant-time
+operation, and severing the bridge between Go's cryptography
+package, and \texttt{big.Int}.
+
+As a proof of concept, we've implemented a fork of Go's RSA implementation,
+replacing \texttt{big.Int} for encryption and decryption, 
+with an internal number type, using the minimal amount of code
+necessary to accomplish this.
+
+Using unsaturated limbs, we've found that our fork of RSA
+suffers only a 1.67x slowdown, while implementing encryption and
+decryption in constant-time.
+
+We hope to prepare a patch for Go's RSA implementation to merge
+in this work soon.
+
 \section{Conclusion}
 
-Summarize the things we put in the introduction.
+In summary, we have shown
+why Go's general purpose big number type, \texttt{big.Int},
+is not suitable for Cryptography, for various reasons.
+Unfortunately, this type gets used out of convenience,
+even in Go's own cryptography library.
+
+To address this, we've created a replacement library for \texttt{big.Int},
+achieving a slowdown of only 2.6x for most operations, while attempting
+to provide constant-time operation.
+
+To test the utility of this library, we've replaced the usage
+of \texttt{big.Int} in Go's implementation of RSA, and DSA, and found
+only a slowdown of 2x.
 
 \section*{Acknowledgements}
+
+Firstly, I'd like to thank Prof. Bryan Ford for supervising this work.
+I'd like to thank Pierluca Borsò, for letting me 
+work on this project.
+Finally, I'd also like to thank Daniel Huigens, and Marin Thiercelin,
+from ProtonMail, for their advice and industry perspective on this work.
+
 \addcontentsline{toc}{section}{Acknowledgements}
 
 \bibliographystyle{plainurl}
