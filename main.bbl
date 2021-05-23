@@ -166,6 +166,11 @@ Thomas Pornin.
 \newblock {BearSSL} - {Constant}-{Time} {Mul}.
 \newblock URL: \url{https://www.bearssl.org/ctmul.html}.
 
+\bibitem{pornin_bearssl_2020-1}
+Thomas Pornin.
+\newblock {BearSSL} - {Big} {Integer} {Design}, 2020.
+\newblock URL: \url{https://www.bearssl.org/bigint.html}.
+
 \bibitem{rivest_method_1978}
 R.~L. Rivest, A.~Shamir, and L.~Adleman.
 \newblock A method for obtaining digital signatures and public-key

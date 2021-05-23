@@ -662,7 +662,52 @@ Describe the algorithm choices we've used for different things.
 
 \subsection{Implementation Techniques}
 
+In this section, we describe a few remaining implementation choices
+and techniques of interest.
+
 \subsubsection{Saturated or Unsatured Limbs}
+
+As mentioned previously, we store numbers in base
+$W := 2^{64}$. This means that we use the full width of a register
+to store each limb. Because of this, we say that are limbs
+are \emph{saturated}. It's also possible to store
+limbs \emph{unsaturated}, by using fewer than $64$ bits.
+BearSSL 
+\cite{pornin_bearssl_2020-1}
+takes this approach, using only $31$ bits of the available $32$ bits
+in the integers it uses. For $64$ bit registers, using $63$ bit unsaturated
+limbs would be the option of choice.
+
+There are two compelling reasons for using unsaturated limbs.
+
+The first is that this leaves an extra bit of space to hold a carry
+or borrow after an addition or subtraction, respectively. This allows
+us to chain together carries to implement operations over multiple
+limbs, without having to use assembly instructions. In Go,
+this isn't really an issue, because \texttt{bits.Add} and
+\texttt{bits.Sub} are provided to implement this intrinsics
+in a cross-platform way.
+
+The second comes that if we use $w$ bits for each limb, then montgomery
+multiplication needs to work with a value of size $2w + 1$ bits. With a fully
+saturated limb of $64$ bits, we need $129$ bits. This uses
+an extra register compared to unsaturated limbs of $63$ bits. Because
+montgomery multiplication is called very often during exponentiation,
+this can yield considerable savings.
+
+The disadvantage of using unsaturated limbs comes when converting
+numbers to and from bytes. With fully saturated limbs, our
+$64$ bit limbs are nicely composed of $8$ bytes. With $63$ bit limbs,
+this isn't the case, making conversion to and from bytes more
+complicated, and expensive. Using unsaturated limbs would
+also require storing additional information about the exact
+announced size of a number, instead of being able to use
+the number of limbs directly.
+
+Ultimately, we opted to use saturated limbs, in order to reuse
+the assembly routines already implemented for low level
+operations in \texttt{big.Int}. These were designed with
+saturated limbs in mind, and thankfully, are constant-time.
 
 \subsubsection{Redundant Reductions}
 
