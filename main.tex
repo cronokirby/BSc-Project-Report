@@ -5,7 +5,7 @@
 \usepackage{hyperref}
 \usepackage{newpxtext, newpxmath}
 \usepackage{minted}
-\usepackage{algorithmic}
+\usepackage{xcolor}
 \usemintedstyle{friendly}
 
 \begin{document}
@@ -740,11 +740,31 @@ checks don't impact the constant-time properties of our library.
 
 \section{Results}
 
-Describe what results we've managed to perform.
+We've compared the performance of our library
+with \texttt{big.Int} operation by operation, as well as in the
+context of the \texttt{go/crypto} package.
+Overall, our library is about 2.6x slower than using
+\texttt{big.Int}.
+In this section, we
+present these results in detail.
 
 \subsection{Comparison with \texttt{big.Int}}
 
 Describe the final performance results we've managed to achieve.
+
+\begin{center}
+ \begin{tabular}{|c | c | c | c|} 
+ \hline
+ Operation & op / s (\texttt{big.Int}) & op / s (\texttt{Nat}) & ratio \\ [0.5ex] 
+ \hline\hline
+ Addition & 7,811,989 & 10,622,287 & 0.74 \\
+ \hline
+ Multiplication & 1,282,808 & 434,802 & 2.95 \\
+ \hline
+ Modular Addition & 9,088,922 & 3,121,003 & 2.91 \\
+ \hline
+\end{tabular}
+\end{center}
 
 \subsection{Comparison with \texttt{go/crypto}}
 
