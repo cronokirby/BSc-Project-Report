@@ -674,6 +674,30 @@ matching limbs are equal.
 
 \subsection{Algorithm Choices}
 
+While going over how each operation works in detail is outside
+the scope of this report, describing some of the high-level
+techniques for certain trickier operations is nonetheless interesting.
+
+Many of operations were inspired by the excellent
+work of Thomas Pornin in BearSSL
+\cite{pornin_bearssl_2020-1}.
+
+\subsubsection{Modular Reduction}
+
+To reduce a number $x$ modulo $m$, we first implement an operation to reduce
+a number of the form.
+
+This technique is describe in \cite{pornin_bearssl_2020-1}.
+
+\subsubsection{Multiplication}
+
+\subsubsection{Exponentiation}
+
+\subsubsection{Inversion}
+
+\subsubsection{Even Inversion}
+
+\subsubsection{Modular Square Roots}
 
 \subsection{Implementation Techniques}
 
