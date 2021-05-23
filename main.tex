@@ -711,6 +711,33 @@ saturated limbs in mind, and thankfully, are constant-time.
 
 \subsubsection{Redundant Reductions}
 
+Our library is defined to prevent misuse. Because of this,
+modular operations work even if their inputs are not already
+reduced. For example, addition modulo $m$ should return the
+right result, even if the inputs are greater than $m$.
+Unfortunately, the cost of reducing inputs modulo $m$ when
+they were already in range is not desirable, since this operation
+is relatively expensive. Ideally, we'd like to avoid reducing
+inputs when we already know that they're correctly reduced.
+
+To implement this, each number stores a pointer to a modulus,
+indicating that it is already reduced by this modulus.
+When we reduce a number modulo $m$, we check this pointer,
+and skip this reduction if it matches $m$. If we modify
+the value of a number, we update the modulus it points to
+accordingly, based on what method was called.
+For example:
+\begin{minted}{Go}
+z.ModAdd(x, y, m)
+\end{minted}
+will set \texttt{z}'s modulus to \texttt{m}.
+
+We only set this modulus pointer based on what methods are called,
+never on the actual value of a result. Because of this, the dynamic
+checks of this pointer only depend on the callgraph of our program.
+Since this graph is statically determined, these redundant reduction
+checks don't impact the constant-time properties of our library.
+
 \section{Results}
 
 Describe what results we've managed to perform.
