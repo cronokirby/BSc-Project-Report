@@ -744,13 +744,19 @@ We've compared the performance of our library
 with \texttt{big.Int} operation by operation, as well as in the
 context of the \texttt{go/crypto} package.
 Overall, our library is about 2.6x slower than using
-\texttt{big.Int}.
+\texttt{big.Int} for most operations,
+but only 2x slower in realistic situations.
 In this section, we
 present these results in detail.
 
 \subsection{Comparison with \texttt{big.Int}}
 
-Describe the final performance results we've managed to achieve.
+We've set up a series of benchmarks to compare the performance
+of \texttt{Nat} compared to \texttt{big.Int} on various operations.
+
+The following operations are all implemented on values, exponents,
+and moduli of 2048 bits. For raw addition and multiplication,
+we use the full size necessary to represent the result in our benchmarks.
 
 \begin{center}
  \begin{tabular}{|c | c | c | c|} 
@@ -766,9 +772,59 @@ Describe the final performance results we've managed to achieve.
 \end{tabular}
 \end{center}
 
+The most expensive operation, by far, is exponentiation. Because
+of this, it's fair to compare the performance on these two types
+mainly on this operation. We can see that \texttt{Nat} is 2.6x
+compared to \texttt{big.Int} for exponentiation, although
+varies in speed for other operations.
+
+For comparing modular square roots, we used the primes
+$p_3 = 2^{244} + 79$, which is $3 \mod 4$,
+and $p_1 = 2^{244} + 153$ which is $1 \mod 4$. We use different primes
+to test the various codepaths for modular square roots.
+
 \subsection{Comparison with \texttt{go/crypto}}
 
-Describe the benchmarks on actual code.
+We've created a forked package
+\cite{meier_cronokirbyctcrypto_2021}
+of \texttt{go/crypto}, where we've replaced the usage of \texttt{big.Int}
+with our own \texttt{Nat} type for both RSA and DSA. All of the code
+using \texttt{big.Int} has been replaced, with the exception of
+primality checking. This endeavour demonstrates the utility of
+our package for writing cryptographic code.
+
+We've also run benchmarks to assess the performance impact, as we
+show in the following table:
+
+\begin{center}
+ \begin{tabular}{|c | c | c | c|} 
+ \hline
+ Operation & op / s (\texttt{big.Int}) & op / s (\texttt{Nat}) & ratio \\ [0.5ex] 
+ \hline\hline
+ RSA Decrypt & 670 & 312 & 2.15 \\
+ \hline
+ RSA Sign & 675 & 372 & 1.81 \\
+ \hline
+ RSA Decrypt (3 Prime) & 1173 & 596 & 1.97 \\
+ \hline
+ DSA Sign & 6202 & 2625 & 2.36 \\
+ \hline
+ DSA Parameters & 0.89 & 1.64 & 0.54 \\
+ \hline
+\end{tabular}
+\end{center}
+
+We use a 2048 bit modulus for both RSA and DSA. For RSA, we use
+the CRT optimization, instead of use exponentiation directly.
+Our benchmarks for \texttt{big.Int} use blinding, but our benchmarks
+for \texttt{Nat} do not. Because \texttt{Nat} is constant-time,
+we don't need to use blinding to mitigate timing attacks.
+We don't include DSA verification, since this can be safely done
+with \texttt{big.Int}.
+
+Overall, we can see that in a real world scenario, the use
+of \texttt{Nat} is only 2x slower. This can surely be improved,
+but is already an encouraging result.
 
 \section{Further Work}
 
