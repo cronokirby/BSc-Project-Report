@@ -292,34 +292,34 @@ according to our threat model.
 
 \subsubsection{Padding}
 
-The \texttt{big.Int} type always normalizes numbers internally,
+The \texttt{big.Int} type normalizes numbers internally,
 removing any leading zero limbs. Even if you initialize a number
 using bytes zero-padded to a certain length, the resulting value
-will immediately chop off these zeros. These extra zeros don't
-change the value of a number. By discarding them, operations on
+will immediately chop off these zeros.
+By discarding them, operations on
 this number will have fewer limbs to process, and will be faster.
 
-Unfortunatelly, this means that \texttt{big.Int} leaks information
-about the padding of numbers pervasively. Since every operation on
+Unfortunately, this means that \texttt{big.Int} pervasively leaks information
+about the padding of numbers. Since every operation on
 a number takes more time the more limbs the number uses,
-the removal of padding leaks the true sizes of numbers
-at every operation.
-Leaking this padding has been exploited
+every operation leaks the padding of numbers.
+This has been exploited
 in OpenSSL \cite{merget_raccoon_2019}, and might potentially
-be a vulnerability in Go's cryptography library, because of \texttt{big.Int}.
+be a vulnerability in Go's cryptography library.
 
 \subsubsection{Leaky Algorithms}
 
-Because \texttt{big.Int} is not written with Cryptography in mind,
-its methods violate the rules set in
+Because \texttt{big.Int} is not written with cryptography in mind,
+its operations violate the rules in
 \ref{threat_model}. Many methods take a different number of iterations
-based on their values, branch conditionally on values, and
-access memory depending on values. Because \texttt{big.Int}
+, branch conditionally, or
+access memory differently
+depending on their values. Because \texttt{big.Int}
 is designed for general purpose use, this problem should only get worse
 as the library is further developed and optimized.
 
 Ultimately, the problem is not the existence of \texttt{big.Int},
-but it's use in Go's cryptography library, and in the broader ecosystem.
+but its use in Go's cryptography library, and in the broader ecosystem.
 
 \subsubsection{Mitigations}
 
@@ -329,8 +329,10 @@ several mitigations to try and make its timing side-channels harder to
 exploit.
 
 One of the most important ones is a mitigation
-for RSA: blinding \cite{kocher_timing_1996}. The decrypt a ciphertext
-$c = m^e \mod N$, we normally calculate:
+for RSA: blinding \cite{kocher_timing_1996}.
+
+To decrypt a ciphertext
+$c = m^e \mod N$, we would normally calculate:
 
 $$
 c^d \mod N
@@ -344,15 +346,14 @@ $d$ as well.
 
 To mitigate this, instead of decrypting $c$ directly,
 we first generate a random integer
-$r \in [0, N - 1]$, and make sure
-it has an inverse $r^{-1}$ mod $N$. Then we decrypt $r^e \cdot c$.
+$r \in (\mathbb{Z}/N\mathbb{Z})^*$. Then, we decrypt $r^e \cdot c$.
 This gives us the value $r \cdot m$, and we can recover
 $m$ by multiplying by $r^{-1}$.
 
-While this does effectively mitigate the simplest attacks
-against exponentiation, a very leaky operation, the other operations
-involving these values are still left unprotected, and may
-have exploitable leakages in more subtle ways. We also have
+While this effectively mitigates the simplest attacks
+against exponentiation, a very leaky operation,
+other methods are left unprotected, and may
+have subtle exploits. We also have
 the unaddressed issue of padding, which has lead to attacks
 in OpenSSL \cite{merget_raccoon_2019}.
 
