@@ -72,28 +72,28 @@ systems, achieving a slowdown of only 2x in this scenario.
 \section{Background}
 
 In this section, we explain how Big Numbers are used in Public Key
-Cryptography, what timing attacks are, and how they affect our threat
-model, as well as what kind of side-channels are present in Go's
+cryptography, what timing side-channels are, how we model their threat,
+as well as what kind of vulnerabilities are present in Go's
 \texttt{big.Int} type.
 
 \subsection{Big Numbers in Cryptography}
 
-As mentioned previously, most Public Key Cryptosystems rely on
+Most Public Key cryptosystems rely on
 modular arithmetic.
 
-In RSA \cite{rivest_method_1978}, for example, a public key $(e, N)$ consists of modulus
-$N \in \mathbb{N}$, usually 2048 bits long, and an exponent taken
-modulo $\varphi(N)$.
-To encrypt a message $m \in \mathbb{Z}/N\mathbb{Z}$, we calculate
-
+In RSA \cite{rivest_method_1978}, for example, a public key $(e, N)$ consists
+of a modulus
+$N \in \mathbb{N}$, usually 2048 bits long, and an exponent $e
+\in [0, \varphi(N) - 1]$.
+To encrypt a message $m \in [0, N - 1]$, we calculate
 $$
 c := m^e \mod N
 $$
 
-The typical word size on computers is now 64 bits. Because of this,
-to do arithmetic modulo $N$, we need a Big Number library to work
-with these large numbers, as well as to provide optimized implementations
-of opereaitons like modular exponentiation, which aren't natively supported.
+Since $N$ is much larger than a register, 
+we need a Big Number library to implement this system.
+Modular exponentiation is also not supported in hardware,
+requiring extra support in software.
 
 DSA
 \cite{technology_digital_1994} also relies on modular arithmetic,
@@ -106,52 +106,43 @@ on an elliptic curve, built over a finite field $K$. This field
 is usually either a prime field $\mathbb{Z}/p\mathbb{Z}$, in which case arithmetic
 modulo $p$ is used, or a
 binary extension field $\text{GF}(2^n)$, in which case
-binary arithmetic in combination with polynomial addition and multiplication
-are used.
-
-For prime fields, a Big Number library is once again necessary, because
+binary and polynomial arithmetic are used.
+For prime fields, a Big Number library necessary, because
 the size of the prime is greater than 200 bits.
-
-In summary, large modular arithmetic is a cornerstone of Public Key
-cryptosystems, requiring Big Numbers in some form.
 
 \subsubsection{Implementing Big Numbers}
 
-When you know the modulus in advance, like for Elliptic Curve Cryptography,
-where prime modulus is part of the system itself, then you
-can implement a library for doing arithmetic with that specific modulus.
-By using a fixed size type, it's easier to provide constant-time operation
-as well.
+When a modulus is known in advance, a special purpose
+library implementing arithmetic with this fixed modulus
+can be used. This is the case for Elliptic Curve cryptography,
+where the prime field is a fixed parameter of the system.
+Using a fixed type makes it easier to provide constant-time operation.
 
-The downside is that since different systems require different moduli,
-a lot of effort has to be expended to implement and support
-these different systems.
-
+A disadvantage is that since different systems require different moduli,
+it takes more work to implement and support each system.
 One way to address this is to automatically generate implementations
 of modular arithmetic, as done by FiatCrypto
 \cite{hvass_high-assurance_nodate}.
 
-In some systems, you need support for dynamic moduli. For example,
-in RSA. In this case, you do need a Big Number libary of some kind,
-providing dynamically sized numbers, and a myriad of operations.
-
+In some systems, you need support for dynamic moduli.
+Take RSA, for example.
+In this case, you need a library supporting dynamically
+sized numbers, as well as various operations.
 
 \subsubsection{Big Numbers in \texttt{go/crypto}}
 
-Go \cite{the_go_authors_go_nodate} provides implementations of numerous
-cryptographic algorithms as part of its standard library,
-including the aforementioned Public Key systems, in the
-\texttt{go/crypto} package.
+Go provides implementations of the Public Key cryptosystems
+we've mentioned so far in its \texttt{go/crypto} package.
 
 Unfortunately \cite{ford_proposal_2017}, the general purpose
-\texttt{big.Int} type gets used in this package for Cryptography,
+\texttt{big.Int} is used, in part, to implement these systems,
 despite its potential vulnerability to timing attacks.
 
 For DSA \cite{technology_digital_1994}, Go uses \texttt{big.Int}
 for all operations, including key generation, signing, and verification.
 
-For RSA \cite{rivest_method_1978}, Go uses \texttt{big.Int}
-for all operations, and fixes this type as part of the API for
+For RSA \cite{rivest_method_1978}, Go embeds \texttt{big.Int}
+as part of the API for
 this package. Key generation, encryption, decryption, signing,
 and verification all use \texttt{big.Int}.
 
@@ -160,31 +151,31 @@ for Elliptic Curves, requiring operations like point addition,
 scalar multiplication, etc. All of these are defined in terms
 of \texttt{big.Int}. Some of the curves have specialized
 implementations of their prime field, only converting from
-\texttt{big.Int} to satisfy the interface curves. The remaining curves
-directly make use \texttt{big.Int} for their field arithmetic.
+\texttt{big.Int} to satisfy this interface. The remaining curves
+directly use \texttt{big.Int} for their field arithmetic.
 
 \subsection{Timing Attacks}
 
 A side-channel
 \cite{kelsey_side_1998}
-leaks secret information about a program not directly,
-but indirectly, through the observable properties of its execution.
+leaks secret information indirectly,
+through the observable effects of a program's execution.
 For example, timing side-channels use the execution time of a program
-to infer properties of the secret data it processes. 
+to gain information about the secret data it handles. 
 A timing attack is the use of a timing side-channel to break the security
-of some program or cryptographic protocol.
+of some program or cryptographic algorithm.
 
-If a program takes a different number of steps based on the value of some
-secret, then this constitutes an obvious timing side-channel.
+When a program takes a different number of steps based on the value of some
+secret, this is an obvious timing side-channel.
 For example, if a naive program for comparing inputs with a secret password
 stops as soon as a mismatch is found, then the algorithm itself has
 a timing side-channel. This side-channel can be exploited, to allow
-the secret password to be guessed byte by byte.
+the secret password to be guessed byte-by-byte.
 
-Not all timing side-channels are this simple, however. Algorithms
-that take the same number of steps regardless of the value of secret
-data can still having timing side-channels because of how the underlying
-hardware executing the program works. For example, a processor may
+Not all timing side-channels are this simple. Algorithms
+that always take the same number of steps
+can still having timing side-channels because of the underlying
+hardware. For example, a processor may
 execute an operation faster for some inputs, or the presence of a cache
 could be used to infer what addresses are being accessed. These
 microarchitectural timing side-channels are also of concern.
