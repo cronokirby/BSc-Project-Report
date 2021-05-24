@@ -10,9 +10,6 @@
 
 \begin{document}
 
-\setlength{\parskip}{1em}
-\setlength{\parindent}{0em}
-
 \onecolumn
 
 \input{cover}
@@ -25,6 +22,9 @@
 \tableofcontents{\protect\thispagestyle{empty}
 
 \clearpage
+
+\setlength{\parskip}{1em}
+\setlength{\parindent}{0em}
 
 \section{Introduction}
 
@@ -726,6 +726,64 @@ in the right result in constant-time based on flags.
 This technique is further described in \cite{pornin_bearssl_2020-1}.
 
 \subsubsection{Multiplication}
+
+Two multiply two numbers $a$, and $b$, we can expand $a$
+over its limbs $a_n W^n + \cdots + a_0$, and then calculate the sum:
+$$
+\sum_{i = 0}^n a_n \cdot b \cdot W^i
+$$
+We can implement the multiplication by $W^i$ by each small
+multiplication
+to a different position in our result. Our result fits over
+double the number of limbs, and can then be truncated or expanded
+to the desired bitsize.
+
+For modular multiplication, we can calculate this result,
+and then reduce it modulo $m$. There is also a technique,
+called Montgomery Multiplication
+\cite{porning_bearssl_2020-1}, which allows us to calculate a slightly
+different result faster.
+
+Let's say that $a$ and $b$ are both reduced
+mod $m$, which has $n$ limbs. The small multiplication
+$a_i b$ fits over $n + 1$ limbs. To reduce this down
+to $n$ limbs, we could do a single reduction step, but estimating
+a quotient is expensive. Instead, we can
+multiply $m$ by a fudge factor $f$, in such a way
+that $a_i b + f m$ has its lowest limb cleared. Then, we can simply
+shift this result right by one limb, obtaining:
+$$
+\frac{a_i b}{W} \mod m
+$$
+The right value for this fudge factor turns out to be:
+$$
+-m_0^{-1} a_i b_0 \mod W
+$$
+Because of the need to invert the least significant limb
+modulo our basis, which is a power of 2, we need $m$ to be an odd number.
+
+If we calculate the sum:
+$$
+\sum_{i = 0}^{n - 1} \frac{a_i b}{W} \mod m
+$$
+then our final result is just:
+$$
+\frac{(a_{n - 1} W^{n - 1} + \cdots + a_o) b}{W^n} = \frac{a b}{W^n} \mod m
+$$
+This isn't exactly the product $ab \mod m$, that we wanted,
+but is much faster to calculate.
+
+If prior to this, we calculate $a W^n \mod m$, then
+performing Montgomery multiplication with $b$ will yield
+the result $ab \mod m$. This is our approach to defining
+a modular multiplication. $a W^n \mod m$ is called
+the Montgomery representation of $a$.
+We can calculate this representation by using
+the modular shifting operation we defined for reduction.
+If we have many multiplications
+to perform, like in exponentiation, the cost of converting
+to this representation is amortized over the number of multiplications
+we do, yielding significant savings.
 
 \subsubsection{Exponentiation}
 
