@@ -176,6 +176,11 @@ Thomas Pornin.
 \newblock {BearSSL} - {Big} {Integer} {Design}, 2020.
 \newblock URL: \url{https://www.bearssl.org/bigint.html}.
 
+\bibitem{pornin_optimized_2020}
+Thomas Pornin.
+\newblock Optimized {Binary} {GCD} for {Modular} {Inversion}.
+\newblock page~16, 2020.
+
 \bibitem{reparaz_dude_2017}
 Oscar Reparaz, Josep Balasch, and Ingrid Verbauwhede.
 \newblock Dude, is my code constant time?
@@ -203,6 +208,13 @@ National Institute of Standards~and Technology.
   \url{https://csrc.nist.gov/publications/detail/fips/186/archive/1994-05-19},
   \href {https://doi.org/10.6028/NIST.FIPS.186}
   {\path{doi:10.6028/NIST.FIPS.186}}.
+
+\bibitem{wahby_hashing_nodate}
+Riad Wahby, Christopher Wood, Armando Faz-Hernández, Sam Scott, and Nick
+  Sullivan.
+\newblock Hashing to {Elliptic} {Curves}.
+\newblock URL:
+  \url{https://tools.ietf.org/html/draft-irtf-cfrg-hash-to-curve-09}.
 
 \bibitem{yarom_cachebleed_2017}
 Yuval Yarom, Daniel Genkin, and Nadia Heninger.

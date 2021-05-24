@@ -7,6 +7,7 @@
 \usepackage{minted}
 \usepackage{xcolor}
 \usemintedstyle{friendly}
+\usepackage[parfill]{parskip}
 
 \begin{document}
 
@@ -22,9 +23,6 @@
 \tableofcontents{\protect\thispagestyle{empty}
 
 \clearpage
-
-\setlength{\parskip}{1em}
-\setlength{\parindent}{0em}
 
 \section{Introduction}
 
@@ -787,11 +785,45 @@ we do, yielding significant savings.
 
 \subsubsection{Exponentiation}
 
+For exponentiation, we use left-to-right exponentiation,
+with a window size of 4 bits. In order to do window lookups
+in constant-time, we do a constant-time conditional assignment
+over each of the possible operands. Even though this requires traversing
+the entire window table every time, we've found that this method
+is still faster than using a window size of 2 bits.
+
 \subsubsection{Inversion}
+
+For modular inversion, we use a variant of
+the binary GCD algorithm, as described in \cite{pornin_optimized_2020}.
+We have yet to implement the most optimized version, which accumulates
+intermediate results into single limb registers, and instead
+perform full width operations at each iteration.
 
 \subsubsection{Even Inversion}
 
+To calculate $x^{-1} \mod m$, when $m$ is an even integer,
+we employ a standard trick. First, we calculate
+$u := m^{-1} \mod x$, and then we calculate our desired inverse as:
+
+$$
+\frac{um - 1}{x}
+$$
+
 \subsubsection{Modular Square Roots}
+
+To calculate $\sqrt{z} \mod p$, we assume that $p$ is prime.
+Which algorithm we use depends on whether $p = 3 \mod 4$,
+or $p = 1 \mod 4$.
+
+In the first case, we can calculate a root as:
+$$
+\sqrt{z} = z^{(p + 1) / 4} \mod p
+$$
+
+In the second case, we use a constant-time variant
+of the Tonnelli-Shanks algorithm, as described in 
+\cite{wahby_hashing_nodate}.
 
 \subsection{Implementation Techniques}
 
