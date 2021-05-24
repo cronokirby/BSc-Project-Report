@@ -866,25 +866,49 @@ we use the full size necessary to represent the result in our benchmarks.
  \hline
  Operation & op / s (\texttt{big.Int}) & op / s (\texttt{Nat}) & ratio \\ [0.5ex] 
  \hline\hline
- Addition & 7,811,989 & 10,622,287 & 0.74 \\
+ Addition & 10,980,842 & 12,164,599 & 0.90 \\
  \hline
- Multiplication & 1,282,808 & 434,802 & 2.95 \\
+ Modular Addition & 6,986,739 & 3,075,188 & 2.27 \\
  \hline
- Modular Addition & 9,088,922 & 3,121,003 & 2.91 \\
+ Multiplication & 1,316,322 & 542,385 & 2.43 \\
+ \hline
+ Modular Reduction & 454,917 & 63,253 & 7.19 \\
+ \hline
+ Modular Multiplication & 1,000,000 & 44,596 & 22.42 \\
+ \hline
+ Modular Inversion & 1,000,000 & 621 & 1610 \\
+ \hline
+ Modular Exponentiation & 223 & 86 & 2.59 \\
  \hline
 \end{tabular}
 \end{center}
 
 The most expensive operation, by far, is exponentiation. Because
 of this, it's fair to compare the performance on these two types
-mainly on this operation. We can see that \texttt{Nat} is 2.6x
+mainly on this operation. We can see that \texttt{Nat} is 2.6x slower
 compared to \texttt{big.Int} for exponentiation, although
-varies in speed for other operations.
+some operations are much slower.
 
 For comparing modular square roots, we used the primes
 $p_3 = 2^{244} + 79$, which is $3 \mod 4$,
 and $p_1 = 2^{244} + 153$ which is $1 \mod 4$. We use different primes
-to test the various codepaths for modular square roots.
+to test the various codepaths for modular square roots:
+
+\begin{center}
+ \begin{tabular}{|c | c | c | c|} 
+ \hline
+ Operation & op / s (\texttt{big.Int}) & op / s (\texttt{Nat}) & ratio \\ [0.5ex] 
+ \hline\hline
+ $\sqrt{z} \mod p_3$ & 40,464 & 26,886 & 1.50 \\
+ \hline
+ $\sqrt{z} \mod p_1$ & - & 7,867 & - \\
+ \hline
+\end{tabular}
+\end{center}
+
+We didn't manage to find a large value where Go's Tonneli Shanks routine
+managed to find a square root without hanging, although we
+expect the ratio to be similar to the other case.
 
 \subsection{Comparison with \texttt{go/crypto}}
 
