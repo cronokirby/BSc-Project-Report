@@ -102,6 +102,14 @@ Benjamin~S Hvass, Diego~F Aranha, and Bas Spitters.
 \newblock High-assurance ﬁeld inversion for curve-based cryptography.
 \newblock page~23.
 
+\bibitem{kaya_koc_analyzing_1996-1}
+C.~Kaya~Koc, T.~Acar, and B.S. Kaliski.
+\newblock Analyzing and comparing {Montgomery} multiplication algorithms.
+\newblock {\em IEEE Micro}, 16(3):26--33, June 1996.
+\newblock Conference Name: IEEE Micro.
+\newblock \href {https://doi.org/10.1109/40.502403}
+  {\path{doi:10.1109/40.502403}}.
+
 \bibitem{kelsey_side_1998}
 John Kelsey, Bruce Schneier, David Wagner, and Chris Hall.
 \newblock Side channel cryptanalysis of product ciphers.
