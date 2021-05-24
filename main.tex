@@ -10,6 +10,9 @@
 
 \begin{document}
 
+\setlength{\parskip}{1em}
+\setlength{\parindent}{0em}
+
 \onecolumn
 
 \input{cover}
@@ -684,10 +687,43 @@ work of Thomas Pornin in BearSSL
 
 \subsubsection{Modular Reduction}
 
-To reduce a number $x$ modulo $m$, we first implement an operation to reduce
-a number of the form.
+To reduce a number $a$ modulo $m$, we first implement an operation
+that allows us to shift in a single limb. This
+lets us reduce a number
+of the form:
+$$
+z := a \cdot W + b
+$$
+with $a \in [0, m - 1]$ and $b \in [0, W - 1]$. With this in place,
+we can reduce an arbitrary number, by shifting in each of its limbs,
+from most significant, to least significant, reducing modulo $m$
+each time.
 
-This technique is describe in \cite{pornin_bearssl_2020-1}.
+Implementing this shifting operation is a bit tricky. In the
+case that $m$ has only a single limb, we can reduce
+$z = z_1 W + z_0$ by dividing the 128 bit number $z1:z0$ by $m$,
+and then using the remainder as our result.
+We implement this division using bitwise operations, because
+Go's equivalent \texttt{bits.Div} operation is not constant-time.
+
+In the case that $m$ has more than one limb,
+we want to estimate the quotient $q := \lfloor z / m \rfloor$,
+and then calculate $z - q \cdot m$, to get our remainder.
+A first estimate divides the most significant two limbs of $z$
+with the most significant limb of $m$, using the division operation
+we've already established. To improve this estimate,
+we can take the most significant 64 bits of $m$, ignoring
+the leading zero bits in $m$'s top limb, and align our 128 bits
+of $z$ accordingly. It's because
+of this need to skip past $m$'s leading zeros
+that we'd like for moduli to not have padding.
+This gives us an estimate $\hat{q} = q \pm 1$.
+We can then calculate $z - \hat{q} \cdot m$, and then either
+add or subtract $m$ based on the result. In practice,
+this means always adding and subtracting $m$, and then mixing
+in the right result in constant-time based on flags.
+
+This technique is further described in \cite{pornin_bearssl_2020-1}.
 
 \subsubsection{Multiplication}
 
