@@ -132,6 +132,11 @@ Paul~C Kocher.
   {DSS}, and {Other} {Systems}.
 \newblock page~10, 1996.
 
+\bibitem{meier_cronokirbyctrsa_nodate}
+Lúcás~Críostóir Meier.
+\newblock cronokirby/ctrsa: {Trying} to make crypto/rsa constant-time.
+\newblock URL: \url{https://github.com/cronokirby/ctrsa}.
+
 \bibitem{meier_cronokirbyctcrypto_2021}
 Lúcás~Críostóir Meier.
 \newblock cronokirby/ctcrypto, May 2021.

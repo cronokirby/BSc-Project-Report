@@ -361,7 +361,7 @@ in OpenSSL \cite{merget_raccoon_2019}.
 
 We've implemented a library, called
 \texttt{safenum} \cite{meier_cronokirbysafenum_2021}, intended to provide
-a replacement for \texttt{big.Int}, suitable for use in Cryptography.
+a replacement for \texttt{big.Int}, suitable for use in cryptography.
 In order to demonstrate its utility, we've replaced some
 of \texttt{go/crypto}'s usage of \texttt{big.Int} with our own library,
 in a separate repository
@@ -372,7 +372,7 @@ library.
 
 \subsection{The \texttt{safenum} library}
 
-Safenum defines a \texttt{Nat} type, which is intended to
+Safenum defines a \texttt{Nat} type, intended to
 replace \texttt{big.Int}. This type represents arbitrary
 numbers in $\mathbb{N}$. Unlike \texttt{big.Int}, we do not handle
 negative numbers. Handling a sign bit in constant-time is exceedingly
@@ -381,7 +381,7 @@ when replacing \texttt{big.Int} in Go's cryptography library.
 
 We represent numbers in base $W := 2^{64}$. Concretely, we
 store a number as a slice of type \texttt{[]uint}, in little
-endian order. We call these the "limbs" of a number. For example,
+endian order. We call these the \enquote{limbs} of a number. For example,
 the slice:
 \begin{minted}{Go}
 []uint{13, 47, 52}
@@ -393,16 +393,17 @@ $$
 These limbs might be padded, to conceal the true value of a number,
 as we'll see later.
 
-We provide operations for addition and multiplication of \texttt{Nats},
-all other operations are for modular arithmetic. For modular arithmetic,
-we provide numerous operations, including modular addition, subtraction,
+We provide operations for addition and multiplication of \texttt{Nats}.
+We also provide numerous operations
+for modular arithmetic, including modular addition, subtraction,
 multiplication, exponentiation, inversion, reduction, and taking
 square roots modulo prime numbers. We also provide the usual operations
 for serializing to and from bytes.
 
 We try and structure the API in a similar way to \texttt{big.Int},
-where an operation is performed on a buffer \texttt{Nat}, which
-can receive the result. For example, this is the signature for
+where an operation is performed on a separate
+\texttt{Nat} to receive the result.
+For example, this is the signature for
 modular addition:
 
 \begin{minted}{Go}
@@ -415,8 +416,7 @@ value, is that we can reuse the memory of $z$ for the result.
 
 We go one step further, in fact, and use the memory of the buffer
 \texttt{Nat} for all scratch space needed inside of an operation.
-Structuring our operations this way allows us to limit unnecessary waste
-of allocation.
+Structuring our operations this way allows us to limit memory waste.
 
 \subsubsection{Handling Size}
 
@@ -430,7 +430,7 @@ true size should be kept secret. The true size is always
 at most the announced size
 
 Because of this, we need to ensure that there's always a clear
-announced size to use for the results that we produced. For modular
+announced size to use for the results that we produce. For modular
 operations, we have an obvious choice: the size of the modulus.
 When doing a modular operation, the result will always receive
 the same announced size as the modulus does.
@@ -509,7 +509,7 @@ like with the public modulus $N$ in RSA. In this case, leaking
 the true size is fine, since even the exact value is known. There
 are some cases where a secret modulus is necessary. For example,
 when generating an RSA key, we use the factorization $N = pq$ of the modulus,
-and calculate our private key modulo $\varphi(N) := (p - 1)(q - 1)$:
+and calculate our private key modulo $\varphi(N) = (p - 1)(q - 1)$:
 
 $$
 d := e^{-1} \mod \varphi(N)
@@ -534,7 +534,7 @@ about which conditions are selected. The core idea here is that whenever
 we're faced with a choice, we perform both branches, and then combine
 the results together without revealing which result we end up using.
 
-For example, an standard algorithm for modular subtraction would look
+For example, a standard algorithm for modular subtraction would look
 like this (in pseudo-Go):
 
 \begin{minted}{Go}
@@ -673,7 +673,7 @@ While going over how each operation works in detail is outside
 the scope of this report, describing some of the high-level
 techniques for certain trickier operations is nonetheless interesting.
 
-Many of operations were inspired by the excellent
+Many of these operations were inspired by the excellent
 work of Thomas Pornin in BearSSL
 \cite{pornin_bearssl_2020-1}.
 
@@ -782,7 +782,7 @@ or borrow after an addition or subtraction, respectively. This allows
 us to chain together carries to implement operations over multiple
 limbs, without having to use assembly instructions. In Go,
 this isn't really an issue, because \texttt{bits.Add} and
-\texttt{bits.Sub} are provided to implement this intrinsics
+\texttt{bits.Sub} are provided to implement these intrinsics
 in a cross-platform way.
 
 The second comes that if we use $w$ bits for each limb, then montgomery
@@ -936,7 +936,7 @@ show in the following table:
 \end{center}
 
 We use a 2048 bit modulus for both RSA and DSA. For RSA, we use
-the CRT optimization, instead of use exponentiation directly.
+the CRT optimization, instead of using exponentiation directly.
 Our benchmarks for \texttt{big.Int} use blinding, but our benchmarks
 for \texttt{Nat} do not. Because \texttt{Nat} is constant-time,
 we don't need to use blinding to mitigate timing attacks.
@@ -973,10 +973,10 @@ Currently, we rely on some assembly routines pulled from
 \texttt{big.Int}, slightly modified to avoid jumping to non-constant-time
 routines. Unfortunately, not all of the primitive operations we would
 like to have are present. Furthermore, we could reduce memory usage
-in some places, by having this operations present a "conditional"
+in some places, by having these operations present a "conditional"
 variant. For example, we could have an add operation taking a
 \texttt{choice} flag, allowing us to choose whether or not to perform
-an addition without leaking information. This would avoid having
+an addition, without leaking information. This would avoid having
 to use a scratch buffer and a conditional copy.
 
 To gain similar speed to the other primitives, these new primitives
@@ -1002,7 +1002,8 @@ Ideally, this library would be internal to RSA, allowing constant-time
 operation, and severing the bridge between Go's cryptography
 package, and \texttt{big.Int}.
 
-As a proof of concept, we've implemented a fork of Go's RSA implementation,
+As a proof of concept, we've implemented a fork of Go's RSA implementation
+\cite{meier_cronokirbyctrsa_nodate},
 replacing \texttt{big.Int} for encryption and decryption, 
 with an internal number type, using the minimal amount of code
 necessary to accomplish this.
@@ -1032,8 +1033,8 @@ only a slowdown of 2x.
 
 \section*{Acknowledgements}
 
-Firstly, I'd like to thank Prof. Bryan Ford for supervising this work.
-I'd like to thank Pierluca Borsò, for letting me 
+Firstly, I'd like to thank Professor Bryan Ford for supervising this work.
+I'd like to thank Pierluca Borsò as well, for letting me 
 work on this project.
 Finally, I'd also like to thank Daniel Huigens, and Marin Thiercelin,
 from ProtonMail, for their advice and industry perspective on this work.
