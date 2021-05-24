@@ -260,10 +260,10 @@ that accesses leak their exact address.
 
 
 Rule 3 is justified in two ways. First, if different branches of a conditional
-statement execute a different number of operations, this leaks information
-about which branch was taken in a fundamental way. Second, even if both
+statement execute a different number of operations,
+we can easily observe which branch was taken. Second, even if both
 branches execute identitical operations, the CPU's branch predictor
-can be exploited, leaking information about which branch was taken
+can be exploited to leak information about which branch was taken
 \cite{
   aciicmez_predicting_2006,
   aciicmez_power_2007,
@@ -274,20 +274,17 @@ logical operations, and shifts, as implemented in hardware,
 are constant-time in their inputs.
 This is the case on most processors, one notable exception being
 microprocessors
-\cite{pornin_bearssl_nodate}. For the platforms which Go,
-and thus our library, targets,
-this assumption is reasonable.
+\cite{pornin_bearssl_nodate}. This assumption is reasonable
+for the platforms targeted by Go and our library.
 
 \subsection{Vulnerabilities in \texttt{big.Int}}
 
 Go provides a general purpose type for Big Numbers: \texttt{big.Int}.
-This implementation is concerned with being broadly applicable,
-and well-optimized. It does not focus on security, or on hardening
-itself against timing side-channels.
-
-Unfortunately, its broad applicability makes it useful for cryptography,
-and it gets used throughout Go's standard cryptography library,
-as we've seen previously.
+This type focuses on being optimized, and useful in various
+situations. It does not focus on security, or on protecting
+against timing side-channels.
+Unfortunately, out of convenience, it gets used in
+cryptography, even inside of Go's standard library.
 
 In this section, we look at some of the important implementation aspects
 of \texttt{big.Int}, and how they might be potentially vulnerable
