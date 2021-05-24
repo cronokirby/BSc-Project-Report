@@ -6,6 +6,7 @@
 \usepackage{newpxtext, newpxmath}
 \usepackage{minted}
 \usepackage{xcolor}
+\usepackage{csquotes}
 \usemintedstyle{friendly}
 \usepackage[parfill]{parskip}
 
@@ -26,48 +27,47 @@
 
 \section{Introduction}
 
-With the Internet cemented as a principal keystone in communication, and ever
-increasing activity taking place digitially, the importance of secure
-communication and Cryptography has never been greater. Thankfully, after
-50 years of Public Key Cryptography
+As more activity takes place digitally, the importance of
+secure communication has never been greater.
+Thankfully, after 50 years of Public Key cryptography
 \cite{hellman_overview_1978},
-we have good theoretical systems to provide these guarantees.
+we have good theoretical systems underpinning our security.
 
-Most of these systems rely on modular arithmetic with large numbers,
-such as RSA or Elliptic Curve Cryptography
-\cite{rivest_method_1978, miller_use_1986}
-.
-Working with such numbers is not natively supported by hardware,
-requiring a "Big Number" software library to provide this functionality.
+Most of these systems rely on modular arithmetic with large numbers.
+For example, RSA \cite{rivest_method_1978},
+or Elliptic Curve cryptography \cite{miller_use_1986}.
+Working with these numbers is not natively supported by hardware.
+Instead, we use a \enquote{Big Number}
+software library to provide this functionality.
 
-Unfortunately, even though Public Key Cryptosystems have been heavily
-scrutinized \textit{in theory}, in practice many vulnerabilities arise
-in software implementations of these systems.
+Unfortunately, although Public Key cryptosystems have been heavily
+scrutinized in theory,
+implementations often suffer from vulnerabilities in practice
 
-One particularly pernicious class of vulnerability are
-\textbf{timing attacks}
-\cite{kocher_cryptanalysis_1995}, where an implementation leaks information
-about secret values through its execution time or cache usage, among
-many side-channels.
-
-Libraries for Big Numbers that are not designed with Cryptography in mind
-are pervasively vulnerable to this class of attack.
+One important class of vulnerability are
+timing side-channels
+\cite{kocher_cryptanalysis_1995}.
+This is where an implementation leaks information
+about secret values through its execution time.
+Big Numbers libraries designed without cryptography in mind
+suffer from these vulnerabilities.
 
 In particular, Go \cite{the_go_authors_go_nodate} provides a general purpose
-Big Number type, \texttt{big.Int}, which suffers from these vulnerabilities,
-as we detail later in this report. Unfortunately, this library
-gets used for Cryptography
+Big Number type, \texttt{big.Int},
+which does not provide constant-time operations.
+Unfortunately, this library
+gets used for cryptography
 \cite{ford_proposal_2017}, including inside of Go's own standard library,
-in \texttt{go/crypto}.
+in the \texttt{go/crypto} package.
 
 We've addressed this issue by creating a library
 \cite{meier_cronokirbysafenum_2021}
-designed to work with Big Numbers in the context of Public Key Cryptography.
-Our library provides the necessary operations for implementing these systems,
-all while avoiding the leakage of secret information.
+providing Big Numbers with constant-time operations.
+Our library provides the necessary operations for Public Key cryptography,
+all while avoiding leakage through timing side-channels.
 To demonstrate its utility, we've modified Go's \texttt{go/crypto}
 package, replacing the use of \texttt{big.Int} in the DSA and RSA
-systems.
+systems, achieving a slowdown of only 2x in this scenario.
 
 \section{Background}
 
