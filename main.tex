@@ -711,8 +711,8 @@ using logical operators, without any short-circuiting.
 \subsection{Algorithm Choices}
 
 While going over how each operation works in detail is outside
-the scope of this report, describing some of the high-level
-techniques for certain trickier operations is nonetheless interesting.
+the scope of this report, describing some the high-level
+techniques used for these operations is still valuable.
 
 Many of these operations were inspired by the excellent
 work of Thomas Pornin in BearSSL
@@ -727,33 +727,46 @@ of the form:
 $$
 z := a \cdot W + b
 $$
-with $a \in [0, m - 1]$ and $b \in [0, W - 1]$. With this in place,
-we can reduce an arbitrary number, by shifting in each of its limbs,
-from most significant, to least significant, reducing modulo $m$
-each time.
+with $a \in [0, m - 1]$ and $b \in [0, W - 1]$. We can use
+this operation to reduce an arbitrary $x$. First, we can
+write out
+$x$ in base $W$:
+$$
+x = x_n W^n + x_{n -1}W^{n - 1} + \cdots + x_0
+$$
+Then, we can rewrite this expression to see how
+shifting plays a role:
+$$
+x = ((x_n W + x_{n - 1})W + \cdots)W + x_0
+$$
+Having written $x$ in this form, it becomes clear that to reduce
+$x$ modulo $m$, we can use our shifting primitive, folding
+in the limbs of $x$ from most significant to least significant.
 
-Implementing the shifting operation involves estimating
-the quotient $q := \lfloor z / m \rfloor$, by dividing
-the most significant 64 bits of $m$ with
-the corresponding 128 bits of $z$,
-and then
-calculating $z - q m$, potentially fixing the result
-by adding or subtracting $m$ again.
+Implementing the shifting operation needs
+the quotient $q := \lfloor z / m \rfloor$,
+in order to calculate $z - q m$.
+Instead of calculating $q$ directly, we instead
+produce an estimate $\hat{q}$, by using the most significant
+$64$ bits of $m$ to divide the corresponding $128$ bits of $z$.
+This estimate satisfies $\hat{q} = q \pm 1$, so we then
+conditionally add and subtract $m$ to correct
+for this error.
 This technique is further described in \cite{pornin_bearssl_2020-1}.
 
 \subsubsection{Inversion}
 
-For modular inversion, the method we use depends on whether
-or modulus is odd or even. As mentioned previously, we can check
-whether or not this is the case, and select the right method.
+For modular inversion, which method we use depends on whether
+our modulus is odd or even. As mentioned previously,
+we're allowed to choose the right method dynamically.
 
 For odd moduli, we use
 the binary GCD algorithm, as described in \cite{pornin_optimized_2020}.
 We have yet to implement the most optimized version, which accumulates
-intermediate results into single limb registers, and instead
+intermediate results into single limb registers. Instead, we
 perform full width operations at each iteration.
 
-For an even modulus $m$
+For an even modulus $m$,
 there's a standard trick to calculate $x^{-1} \mod m$.
 First, we calculate
 $u := m^{-1} \mod x$,
@@ -764,14 +777,21 @@ $$
 \frac{um - 1}{x}
 $$
 
+This requires implementing a division operation that works
+with padded numbers. We can't reuse the
+limb-by-limb modular reduction
+routine we normally use, and instead adapt
+a bit-by-bit reduction routine, as described in
+\cite{pornin_bearssl_2020-1}.
+
 \subsubsection{Exponentiation}
 
 For exponentiation, we use left-to-right exponentiation,
-with a window size of 4 bits. In order to do window lookups
-in constant-time, we do a constant-time conditional assignment
-over each of the possible operands. Even though this requires traversing
-the entire window table every time, we've found that this method
-is still faster than using a window size of 2 bits.
+with a window size of 4 bits. To perform window lookups,
+we use a constant-time conditional assignment
+over each of the possible window values. Even though this requires traversing
+the entire window table at every iteration, we've found that this method
+is still faster than using a smaller window size of 2 bits.
 
 \subsubsection{Multiplication}
 
@@ -781,8 +801,9 @@ for both odd and even moduli.
 
 In the case of odd moduli, using Montgomery multiplication
 \cite{kaya_koc_analyzing_1996-1, pornin_bearssl_2020-1} is
-faster, provided that the operands are already in
-their so-called Montgomery representation. For exponentiation,
+faster, but requires converting inputs into their Montgomery
+representation, producing outputs in this representation.
+For exponentiation,
 the cost of converting to and from this representation is amortized,
 since we do many multiplications between conversions, making
 it considerably faster to use this technique. Unfortunately,
