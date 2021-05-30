@@ -558,13 +558,15 @@ violating them.
 \subsection{Constant-Time Operations}
 
 The rules we established in our threat model \ref{threat_model}
-are quite stringent. For many operations, we want to have conditional
-behavior depending on the values and results we see. Without access
-to branching, this would seem impossible. Thankfully, there are workarounds
-to enable us to have conditional behavior, all while not leaking information
-about which conditions are selected. The core idea here is that whenever
-we're faced with a choice, we perform both branches, and then combine
-the results together without revealing which result we end up using.
+are quite stringent. For most operations, we need have conditional
+behavior depending on the values we process. Without access
+to branching, this seems difficult.
+Thankfully, we can emulate branching
+without leaking information.
+The idea is simple: to choose between two branches, we perform both,
+and then combine
+the results together, without revealing
+which result is produced.
 
 For example, a standard algorithm for modular subtraction would look
 like this (in pseudo-Go):
@@ -586,9 +588,10 @@ requires a new primitive:
 func (z *Nat) ctCondCopy(v choice, y *Nat) *Nat
 \end{minted}
 
-This function assigns $y$ to $z$ if $v = 1$, and does nothing otherwise.
-Furthermore, this primitive shouldn't leak any information about
-whether or not the condition was true.
+This function assigns \texttt{y} to \texttt{z} if
+\texttt{v == 1}, and does nothing otherwise.
+Furthermore, this primitive should leak no information about
+the condition.
 
 With this in place, we can implement modular subtraction without leakage:
 
@@ -603,29 +606,31 @@ func (z *Nat) ModSub(x *Nat, y *Nat, m *Modulus) *Nat {
 We always perform the addition, and copy over the result if necessary,
 without leaking the value of \texttt{borrow}.
 
-This kind of rearrangement is the foundation that allows us to replace
-branching in algorithms with constant-time operations.
+This pattern is what allows us to replace
+branching with constant-time operations throughout
+our algorithms.
 
 \subsubsection{Building Primitives}
 
-The question remains: how do you build up the primitives like
+How do you make primitives like
 \texttt{ctCondCopy}, which let you choose results without
-leaking which result was chosen?
+leaking which choice was made?
 
-The methods for constant-time choice are analagous to the standard
-programming methods for conditional branching. Instead of using
+The methods for constant-time choice are analagous to
+those used for variable-time choice. Instead of using
 \texttt{bool} to represent the result of a condition, we use
 
 \begin{minted}{Go}
 type choice Word
 \end{minted}
 
-The value of a choice is either $1$ or $0$, but we use the same
-type as full limbs, to try and avoid having the compiler
-turning or manipulations back into branches.
+The value of a choice is either \texttt{1} or \texttt{0},
+but we use the same
+type as full limbs, to avoid having the compiler
+re-insert branches into our code.
 
 From this choice value, we can build a primitive that selects
-between two limbs without leaking which choice was selected:
+between two limbs, without leaking which choice was selected:
 
 \begin{minted}{Go}
 func ctIfElse(v choice, x, y Word) Word {
@@ -634,17 +639,20 @@ func ctIfElse(v choice, x, y Word) Word {
 } 
 \end{minted}
 
-This routine returns $x$ if $v = 1$, and $y$ otherwise. Unlike
-a conditional statement, this is implemented through bitwise operations,
-and doesn't leak information about what was selected.
+This routine returns \texttt{x} if
+\texttt{v == 1}, and \texttt{y} otherwise.
+The bitwise operations don't leak information about
+our choice, unlike a conditional statement.
 
-If $v = 0$, then \texttt{mask} contains only zeros, and we're left
+If \texttt{v == 0}, then \texttt{mask} contains only zeros, and we're left
 with \texttt{y}. When \texttt{v == 1},
-then \texttt{mask} only contains ones. The \texttt{y}'s cancel eachother out,
+then \texttt{mask} only contains ones. The \texttt{y}s cancel each
+other out,
 leaving us with \texttt{x}.
 
 We can use this primitive to build up a larger selection primitive,
-allowing us to assign one slice to another, conditionally:
+allowing us to conditionally
+assign an entire slice of limbs to another:
 
 \begin{minted}{Go}
 func ctCondCopy(v choice, x, y []Word) {
@@ -655,9 +663,10 @@ func ctCondCopy(v choice, x, y []Word) {
 \end{minted}
 
 These primitives allow us to use \texttt{choice} to introduce conditional
-behavior without leaking our choices, but we also need primitives to
-create \texttt{choice} values in the first place. These are built up
-in a similar way from small primitives to large primitives.
+behavior without leaking our choices, but we also need
+a way to
+create \texttt{choice} values. These are built up
+in a similar way, from small functions to larger ones.
 
 We can decide whether or not two limbs are equal using some bitwise
 trickery:
@@ -670,21 +679,21 @@ func ctEq(x, y Word) choice {
 \end{minted}
 
 To understand why this trick works, first realize that in two's complement,
-either the most significant bit of a number is set, or the most significant
-bit of a number's negation is set, unless that number is zero.
-Thus, the expression
+if you take any number $x \neq 0$,
+then the most significant bit of either $x$ or $-x$ is set.
+For $0$, neither are set.
+We can check that \texttt{q} is non-zero by seeing
+if either bit is set:
 \begin{minted}{Go}
 choice((q|-q)>>63)
 \end{minted}
-simply checks, using only bitwise operations, that
-\texttt{q} is not zero.
 Since \texttt{q} is zero precisely when \texttt{x} and \texttt{y}
-are equal, we can simply negate the non-zero check.
+are equal, we negate this non-zero check.
 
 We can use this primitive to compare entire slices of limbs
 in constant time:
 
-\begin{minted}{Go}
+\begin{minted}[samepage]{Go}
 func cmpEq(x []Word, y []Word) choice {
   res := choice(1)
   for i := 0; i < len(x) && i < len(y); i++ {
@@ -694,10 +703,10 @@ func cmpEq(x []Word, y []Word) choice {
 }
 \end{minted}
 
-We can't exit early, since that would leak information about
-the value of x and y. Instead, we combine all the results together,
-using the fact that two slices are equal when every one of their
-matching limbs are equal.
+Two slices are equal when each of their limbs match.
+Since we can't exit early without leaking information
+about \texttt{x} and \texttt{y}, we implement this formula
+using logical operators, without any short-circuiting.
 
 \subsection{Algorithm Choices}
 
