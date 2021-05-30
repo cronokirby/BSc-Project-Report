@@ -420,20 +420,25 @@ Structuring our operations this way allows us to limit memory waste.
 
 \subsubsection{Handling Size}
 
-Unlike \texttt{big.Int}, a \texttt{Nat} doesn't truncate its limbs
-to remove any zero padding. Because of this, we distinguish
-between the \emph{true size} of a number, which is how many significant
-bits or limbs it actually has, and the \emph{announced size}
-of a number, which is how many limbs are actually used to store
-that number. The announced size is allowed to be leaked, while the
-true size should be kept secret. The true size is always
-at most the announced size
+A \texttt{big.Int} always stores a value using as few limbs
+as possible. Its \textbf{true size}, the number of limbs
+necessary to store a value, always matches its \textbf{announced size},
+the number of limbs actually stored. When creating
+a \texttt{big.Int}, any padding is immediately stripped away,
+to satisfy this invariant.
 
-Because of this, we need to ensure that there's always a clear
-announced size to use for the results that we produce. For modular
+For \texttt{Nat} however, we allow values to be padded.
+This means that the announced size of a number
+can be larger than its true size. Because the announced size
+is what actually affects the runtime of our operations,
+we can make sure that this size depends only on public information,
+allowing us to keep the true size secret.
+
+This means that every result we produce needs a clear
+announced size. For modular
 operations, we have an obvious choice: the size of the modulus.
 When doing a modular operation, the result will always receive
-the same announced size as the modulus does.
+the same announced size as the modulus.
 
 For example, when doing modular addition:
 
@@ -442,15 +447,16 @@ func (z *Nat) ModAdd(x *Nat, y *Nat, m *Modulus) *Nat
 \end{minted}
 
 our result \texttt{z} will have the same announced size as \texttt{m}.
-After modular addition, we have that $z \in [0, m - 1]$ by definition.
-Because of this, leaking the fact that the true size of $z$
-is at most that of $m$ leaks no information about what value $z$
-actually has, beyond what's knowable just by inspecting the call
-graph in the source code of a program.
+This implies that the true size of \texttt{z} is at most that
+of \texttt{m}.
+After modular addition, we know that $z \in [0, m - 1]$,
+so this fact about the true size of \texttt{z} does
+not reveal anything new.
 
 When serializing a \texttt{Nat}, we respect its announced size,
 and produce zeros for padding as necessary. This is done without
-any special handling, because we already store padded limbs anyways.
+any special handling, since extra zeros are already stored
+to match our announced size.
 
 Similarly, when deserializing a \texttt{Nat} from bytes,
 we respect any padding, unlike \texttt{big.Int}. For example,
@@ -459,13 +465,15 @@ with a \texttt{Nat} with an announced size of 256 bits, regardless
 of the value of those bytes.
 
 This leaves us with non-modular addition and multiplication of numbers.
-One approach is to use the maximum possible resulting size for our
-result's announced length. For example, if we multiply
-numbers $x_1$ and $x_2$, of announced size $b_1$ and $b_2$, then
+One approach is to use whatever size necessary to store
+a maximal result.
+For example, if we multiply
+numbers $x_1$ and $x_2$, of announced sizes $b_1$ and $b_2$, then
 our result will need a size of at most $b_1 + b_2$.
-In situations where we know that our result will be smaller,
-this size explosion can be undesirable.
 
+The disadvantage is that we use more and more space for each
+operation, and we're unable to shrink the announced size,
+even when we know that our result would fit.
 Because of this, we opt towards letting users specify exactly how many
 resulting bits they need in the output. For example,
 multiplication has the following signature:
@@ -479,8 +487,9 @@ We use this to determine the result's announced length. Any output
 beyond that capacity will simply be discarded.
 
 In summary, the announced size of a \texttt{Nat} is always
-clear based on how it's produced, and results from deserializing
-a value, from using the same size as a modulus, or from manually
+clear based on how it's produced.
+This size comes from deserializing
+a value, from matching the size of a modulus, or from manually
 deciding on an output size.
 
 \subsubsection{Moduli}
