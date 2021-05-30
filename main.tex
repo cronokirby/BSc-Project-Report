@@ -520,8 +520,25 @@ it's clear that the true size of $\varphi(N)$ is approximately
 that of $N$, which is known. In this case, leaking the true size of
 $\varphi(N)$ is fine.
 
-Using a separate modulus type is necessary to have this
-weaker constraint on its announced size.
+Finally, moduli are also allowed to leak whether or not
+they are even. The motivation behind this is that certain modular
+operations have faster variants for odd moduli, or require
+different algorithms to support even moduli. Rather than
+providing different methods for these different cases, we choose
+to select the correct variant internally, making all modular
+operations work without any caveats. This requires dynamically
+checking whether or not a modulus is odd or even, in order
+to dispatch the right operation.
+
+Fortunately, we're not
+aware of any realistic situation where the evennness of a
+modulus needs to be kept secret. In fact, for the cryptographic
+algorithms we know of, the evenness of the modulus used
+is known statically, making this check perfectly fine.
+
+Because of these weaker constraints on what information can be leaked,
+we need a separate modulus type, in order to violate the stricter
+rules for normal numbers.
 
 \subsection{Constant-Time Operations}
 
@@ -700,6 +717,28 @@ calculating $z - q m$, potentially fixing the result
 by adding or subtracting $m$ again.
 This technique is further described in \cite{pornin_bearssl_2020-1}.
 
+\subsubsection{Inversion}
+
+For modular inversion, the method we use depends on whether
+or modulus is odd or even. As mentioned previously, we can check
+whether or not this is the case, and select the right method.
+
+For odd moduli, we use
+the binary GCD algorithm, as described in \cite{pornin_optimized_2020}.
+We have yet to implement the most optimized version, which accumulates
+intermediate results into single limb registers, and instead
+perform full width operations at each iteration.
+
+For an even modulus $m$
+there's a standard trick to calculate $x^{-1} \mod m$.
+First, we calculate
+$u := m^{-1} \mod x$,
+using our method for odd moduli,
+and then we calculate our desired inverse as:
+
+$$
+\frac{um - 1}{x}
+$$
 
 \subsubsection{Exponentiation}
 
@@ -712,35 +751,19 @@ is still faster than using a window size of 2 bits.
 
 \subsubsection{Multiplication}
 
-We implement Montgomery Multiplication
-\cite{kaya_koc_analyzing_1996-1, pornin_bearssl_2020-1}, both
-for exponentiation, but also for standard modular multiplication.
+For modular multiplication, we calculate the full product
+$ab$, and then reduce this result modulo $m$. This works
+for both odd and even moduli.
 
-To calculate $ab \mod m$,
-where $m$ has $n$ limbs, we first calculate the montgomery representation
-$aW^n \mod m$, using the modular shift operation we implemented for
-reduction. Then, we calculate the montgomery product
-between $aW^n$ and $b$. We've found this method to be faster
-than multliplying $a$ and $b$ to produce a $2n$ limb result, and then
-calculating a modular reduction.
-
-\subsubsection{Inversion}
-
-For modular inversion, we use a variant of
-the binary GCD algorithm, as described in \cite{pornin_optimized_2020}.
-We have yet to implement the most optimized version, which accumulates
-intermediate results into single limb registers, and instead
-perform full width operations at each iteration.
-
-\subsubsection{Even Inversion}
-
-To calculate $x^{-1} \mod m$, when $m$ is an even integer,
-we employ a standard trick. First, we calculate
-$u := m^{-1} \mod x$, and then we calculate our desired inverse as:
-
-$$
-\frac{um - 1}{x}
-$$
+In the case of odd moduli, using Montgomery multiplication
+\cite{kaya_koc_analyzing_1996-1, pornin_bearssl_2020-1} is
+faster, provided that the operands are already in
+their so-called Montgomery representation. For exponentiation,
+the cost of converting to and from this representation is amortized,
+since we do many multiplications between conversions, making
+it considerably faster to use this technique. Unfortunately,
+Montgomery multiplication doesn't work for even moduli,
+so exponentiation is slower in that case.
 
 \subsubsection{Modular Square Roots}
 
