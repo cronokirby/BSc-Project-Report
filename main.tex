@@ -494,30 +494,31 @@ deciding on an output size.
 
 \subsubsection{Moduli}
 
-In our library, we've decided to make a separate type for representing
+In our library, we use a different type for
 the moduli used in modular arithmetic: \texttt{Modulus}. There are several
 reasons for doing this.
 
-First, various operations in modular arithmetic require different properties
+First, various modular operations use certain properties
 of the modulus which can be pre-computed. For example, montgomery multiplication
-requires us to know $m^{-1} \mod W$, with $W$ our base,
-and $m$ our modulus. By using a separate type for moduli, we can
-precompute these values.
+uses $m^{-1} \mod W$, with $W$ our base.
+Using a separate type for moduli lets us avoid
+recomputing these properties.
 
-Second, the true size of a modulus is considered to be leakable.
-As a consequence, moduli are stored \emph{without} padding.
+Second, we allow the true size of a modulus to be leaked.
+Moduli are stored \emph{without} padding.
 This is desirable because modular reduction needs access to the most
 significant bits of a modulus, and fetching this information without
 leaking padding is exceedingly difficult. Furthermore,
 by storing moduli without padding, the announced size of numbers produced
-through modular operations is as tight as possible, which speeds
-up operation.
+through modular operations is as tight as possible, making
+every operation faster.
 
 This assumption is safe in cryptography. Moduli are often public,
 like with the public modulus $N$ in RSA. In this case, leaking
-the true size is fine, since even the exact value is known. There
-are some cases where a secret modulus is necessary. For example,
-when generating an RSA key, we use the factorization $N = pq$ of the modulus,
+the true size is fine: even the exact value is known. There
+are other cases where a secret modulus is necessary.
+Even then, the true size of that modulus remains known. For example,
+when generating an RSA key, we know the factorization $N = pq$ of the modulus,
 and calculate our private key modulo $\varphi(N) = (p - 1)(q - 1)$:
 
 $$
@@ -534,20 +535,25 @@ they are even. The motivation behind this is that certain modular
 operations have faster variants for odd moduli, or require
 different algorithms to support even moduli. Rather than
 providing different methods for these different cases, we choose
-to select the correct variant internally, making all modular
-operations work without any caveats. This requires dynamically
+to select the correct variant internally, allowing all modular
+operations to work without exception. This requires
 checking whether or not a modulus is odd or even, in order
-to dispatch the right operation.
+to dispatch the right operation, leaking this bit of
+information in the process.
 
 Fortunately, we're not
 aware of any realistic situation where the evennness of a
 modulus needs to be kept secret. In fact, for the cryptographic
 algorithms we know of, the evenness of the modulus used
 is known statically, making this check perfectly fine.
+In RSA, for example, the modulus $N$ is odd by construction, and
+$\varphi(N)$ is even as a consequence.
 
-Because of these weaker constraints on what information can be leaked,
-we need a separate modulus type, in order to violate the stricter
-rules for normal numbers.
+Since moduli are stored without padding, we require a separate
+type, to not violate \texttt{Nat}'s contract around size.
+Moduli also have weaker constraints on information leakage,
+so providing a separate type helps to avoid accidentally
+violating them.
 
 \subsection{Constant-Time Operations}
 
