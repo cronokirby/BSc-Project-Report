@@ -616,7 +616,7 @@ How do you make primitives like
 \texttt{ctCondCopy}, which let you choose results without
 leaking which choice was made?
 
-The methods for constant-time choice are analagous to
+The methods for constant-time choice are analogous to
 those used for variable-time choice. Instead of using
 \texttt{bool} to represent the result of a condition, we use
 
@@ -825,88 +825,100 @@ In the second case, we use a constant-time variant
 of the Tonnelli-Shanks algorithm, as described in 
 \cite{wahby_hashing_nodate}.
 
-\subsection{Implementation Techniques}
+\subsection{Implementation Choices}
 
-In this section, we describe a few remaining implementation choices
-and techniques of interest.
+In this section, we describe a few more details
+about how numbers are stored, and the motivation behind
+these choices.
 
 \subsubsection{Saturated or Unsatured Limbs}
 
-As mentioned previously, we store numbers in base
+We store numbers in base
 $W := 2^{64}$. This means that we use the full width of a register
 to store each limb. Because of this, we say that are limbs
-are \emph{saturated}. It's also possible to store
-limbs \emph{unsaturated}, by using fewer than $64$ bits.
+are \textbf{saturated}. It's also possible to store
+limbs \textbf{unsaturated}, by using fewer than $64$ bits.
 BearSSL 
 \cite{pornin_bearssl_2020-1}
 takes this approach, using only $31$ bits of the available $32$ bits
 in the integers it uses. For $64$ bit registers, using $63$ bit unsaturated
-limbs would be the option of choice.
+limbs would be the analogous choice.
 
 There are two compelling reasons for using unsaturated limbs.
 
-The first is that this leaves an extra bit of space to hold a carry
-or borrow after an addition or subtraction, respectively. This allows
+First, this leaves an extra bit of space to hold a carry
+or borrow after an addition or subtraction. This allows
 us to chain together carries to implement operations over multiple
 limbs, without having to use assembly instructions. In Go,
-this isn't really an issue, because \texttt{bits.Add} and
-\texttt{bits.Sub} are provided to implement these intrinsics
+this isn't concern, since \texttt{bits.Add} and
+\texttt{bits.Sub} can be used to implement these intrinsics
 in a cross-platform way.
 
-The second comes that if we use $w$ bits for each limb, then montgomery
+Second, if we use $w$ bits for each limb, then montgomery
 multiplication needs to work with a value of size $2w + 1$ bits. With a fully
 saturated limb of $64$ bits, we need $129$ bits. This uses
 an extra register compared to unsaturated limbs of $63$ bits. Because
 montgomery multiplication is called very often during exponentiation,
 this can yield considerable savings.
 
-The disadvantage of using unsaturated limbs comes when converting
+One disadvantage of using unsaturated limbs comes when converting
 numbers to and from bytes. With fully saturated limbs, our
-$64$ bit limbs are nicely composed of $8$ bytes. With $63$ bit limbs,
-this isn't the case, making conversion to and from bytes more
-complicated, and expensive. Using unsaturated limbs would
+$64$ bit limbs are composed of exactly $8$ bytes. With $63$ bit limbs,
+this isn't the case, making conversion more
+complicated and expensive.
+
+Using unsaturated limbs would
 also require storing additional information about the exact
 announced size of a number, instead of being able to use
-the number of limbs directly.
+the number of limbs directly, as we do now.
 
-Ultimately, we opted to use saturated limbs, in order to reuse
-the assembly routines already implemented for low level
-operations in \texttt{big.Int}. These were designed with
-saturated limbs in mind, and thankfully, are constant-time.
+Finally, by using saturated limbs, we can use the assembly routines
+already implemented for low level operations
+in \texttt{big.Int}, which uses saturated limbs. These low-level
+routines are constant-time, and speed up basic operations.
+
+Interoperability with these routines
+is ultimately the main reason why we opted
+for using saturated limbs.
 
 \subsubsection{Redundant Reductions}
 
-Our library is defined to prevent misuse. Because of this,
+Our library tries to prevent misuse. Because of this,
 modular operations work even if their inputs are not already
 reduced. For example, addition modulo $m$ should return the
 right result, even if the inputs are greater than $m$.
 Unfortunately, the cost of reducing inputs modulo $m$ when
-they were already in range is not desirable, since this operation
+they are already in range is not desirable, since this operation
 is relatively expensive. Ideally, we'd like to avoid reducing
-inputs when we already know that they're correctly reduced.
+inputs when we know this reduction
+is redundant.
 
-To implement this, each number stores a pointer to a modulus,
-indicating that it is already reduced by this modulus.
+To implement this, each \texttt{Nat} stores a pointer to a modulus,
+indicating that it has been reduced by this modulus.
 When we reduce a number modulo $m$, we check this pointer,
-and skip this reduction if it matches $m$. If we modify
+and skip the reduction if it matches $m$. If we modify
 the value of a number, we update the modulus it points to
 accordingly, based on what method was called.
 For example:
 \begin{minted}{Go}
 z.ModAdd(x, y, m)
 \end{minted}
-will set \texttt{z}'s modulus to \texttt{m}.
+will set \texttt{z}'s modulus to \texttt{m}, and calling:
+\begin{minted}{Go}
+z.SetBytes(data)
+\end{minted}
+will clear \texttt{z}'s modulus, making it \texttt{nil}.
 
-We only set this modulus pointer based on what methods are called,
-never on the actual value of a result. Because of this, the dynamic
-checks of this pointer only depend on the callgraph of our program.
+We this pointer based strictly on what methods are called,
+never on the actual value of a result. The dynamic
+checks of this pointer only depend on the call-graph of our program.
 Since this graph is statically determined, these redundant reduction
 checks don't impact the constant-time properties of our library.
 
 \section{Results}
 
 We've compared the performance of our library
-with \texttt{big.Int} operation by operation, as well as in the
+with \texttt{big.Int}, operation by operation, as well as in the
 context of the \texttt{go/crypto} package.
 Overall, our library is about 2.6x slower than using
 \texttt{big.Int} for most operations,
@@ -920,7 +932,7 @@ We've set up a series of benchmarks to compare the performance
 of \texttt{Nat} compared to \texttt{big.Int} on various operations.
 
 The following operations are all implemented on values, exponents,
-and moduli of 2048 bits. For raw addition and multiplication,
+and (odd) moduli of 2048 bits. For raw addition and multiplication,
 we use the full size necessary to represent the result in our benchmarks.
 
 \begin{center}
@@ -968,7 +980,7 @@ to test the various codepaths for modular square roots:
 \end{tabular}
 \end{center}
 
-We didn't manage to find a large value where Go's Tonneli Shanks routine
+We couldn't find a large value where Go's Tonneli Shanks routine
 managed to find a square root without hanging, although we
 expect the ratio to be similar to the other case.
 
@@ -979,7 +991,7 @@ We've created a forked package
 of \texttt{go/crypto}, where we've replaced the usage of \texttt{big.Int}
 with our own \texttt{Nat} type for both RSA and DSA. All of the code
 using \texttt{big.Int} has been replaced, with the exception of
-primality checking. This endeavour demonstrates the utility of
+primality checking. This demonstrates the utility of
 our package for writing cryptographic code.
 
 We've also run benchmarks to assess the performance impact, as we
@@ -1038,7 +1050,7 @@ to detect unwanted time-variation.
 \subsection{Optimizing Assembly Routines}
 
 Currently, we rely on some assembly routines pulled from
-\texttt{big.Int}, slightly modified to avoid jumping to non-constant-time
+\texttt{big.Int}, slightly modified to avoid jumping to variable-time
 routines. Unfortunately, not all of the primitive operations we would
 like to have are present. Furthermore, we could reduce memory usage
 in some places, by having these operations present a "conditional"
@@ -1054,41 +1066,45 @@ to help with writing assembly routines in Go, such as the Avo library.
 
 \subsection{Upstreaming to \texttt{go/crypto}}
 
-While we believe our library is immediately useful for the broader
+While we hope our library is immediately useful for the broader
 ecosystem, it's not realistically going to be replacing
-the use of \texttt{big.Int} in Go's cryptography library any time soon.
+\texttt{big.Int} in Go's cryptography library any time soon.
 
 The most likely path towards removing \texttt{big.Int} from
-\texttt{go/crypto} is likely to move towards specialized arithmetic
+\texttt{go/crypto} is to move towards specialized arithmetic
 implementations for each prime field involved in ECC. DSA is a legacy
 algorithm, where the security flaws introduced
 by \texttt{big.Int} are not of major concern.
 
-This leaves RSA. Unfortunately, the nature of RSA, requiring dynamic
-moduli, makes it so that a big number library of some kind is necessary.
+This leaves RSA. Unfortunately, because RSA requires dynamic
+moduli, we need a big number library of some kind.
 Ideally, this library would be internal to RSA, allowing constant-time
 operation, and severing the bridge between Go's cryptography
 package, and \texttt{big.Int}.
 
 As a proof of concept, we've implemented a fork of Go's RSA implementation
 \cite{meier_cronokirbyctrsa_nodate},
-replacing \texttt{big.Int} for encryption and decryption, 
-with an internal number type, using the minimal amount of code
-necessary to accomplish this.
+replacing \texttt{big.Int} with an internal number
+type,
+using the minimal amount of code
+necessary to implement encryption and decryption.
+The public API, as well as key generation,
+still use \texttt{big.Int}.
 
 Using unsaturated limbs, we've found that our fork of RSA
 suffers only a 1.67x slowdown, while implementing encryption and
 decryption in constant-time.
 
 We hope to prepare a patch for Go's RSA implementation to merge
-in this work soon.
+this work soon.
 
 \section{Conclusion}
 
 In summary, we have shown
 why Go's general purpose big number type, \texttt{big.Int},
-is not suitable for Cryptography, for various reasons.
+is not suitable for Cryptography.
 Unfortunately, this type gets used out of convenience,
+and for lack of better alternatives,
 even in Go's own cryptography library.
 
 To address this, we've created a replacement library for \texttt{big.Int},
