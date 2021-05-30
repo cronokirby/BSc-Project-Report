@@ -118,8 +118,8 @@ can be used. This is the case for Elliptic Curve cryptography,
 where the prime field is a fixed parameter of the system.
 Using a fixed type makes it easier to provide constant-time operation.
 
-A disadvantage is that since different systems require different moduli,
-it takes more work to implement and support each system.
+A disadvantage is that different systems require different moduli,
+so it takes more work to implement and support each system.
 One way to address this is to automatically generate implementations
 of modular arithmetic, as done by FiatCrypto
 \cite{hvass_high-assurance_nodate}.
@@ -208,7 +208,7 @@ If data accesses depend on a secret value, the observed execution
 time will also depend on this value. Additionally,
 an attacker located on the same machine
 can place data into the cache, and probe
-the cache themselves, to learn even finer information about the
+the cache themselves, to learn more precise information about the
 program's access patterns. This kind of colocation increasingly common,
 as more applications are run on cloud servers.
 
@@ -218,8 +218,8 @@ against various cryptosystems
   bernstein_cache-timing_2005,
   yarom_cachebleed_2017,
   cabrera_aldaya_cache-timing_2019}
-. Accessing data is thus based on secret
-values fraught with peril.
+; accessing data based on secret values should
+be avoided in cryptographic code.
 
 \subsubsection{Our Threat-Model}
 \label{threat_model}
@@ -238,7 +238,7 @@ albeit pessimistic, set of rules:
 
 Rule 1 is justified by theoretical concerns: a longer loop
 uses more operations. In practice, it's difficult to observe
-the iterations of each loop in a program from an overall timing signal,
+the iterations of each loop in a program from a global timing signal,
 making this a pessimistic rule.
 
 Rule 2 is justified by various cache based side-channels and attacks
@@ -283,11 +283,12 @@ Go provides a general purpose type for Big Numbers: \texttt{big.Int}.
 This type focuses on being optimized, and useful in various
 situations. It does not focus on security, or on protecting
 against timing side-channels.
-Unfortunately, out of convenience, it gets used in
+Unfortunately, out of convenience,
+and for lack of better alternatives, it gets used in
 cryptography, even inside of Go's standard library.
 
 In this section, we look at some of the important implementation aspects
-of \texttt{big.Int}, and how they might be potentially vulnerable
+of \texttt{big.Int}, and how they might be vulnerable
 according to our threat model.
 
 \subsubsection{Padding}
@@ -397,10 +398,11 @@ We provide operations for addition and multiplication of \texttt{Nats}.
 We also provide numerous operations
 for modular arithmetic, including modular addition, subtraction,
 multiplication, exponentiation, inversion, reduction, and taking
-square roots modulo prime numbers. We also provide the usual operations
-for serializing to and from bytes.
+square roots modulo prime numbers. We also provide operations
+for serializing to and from bytes, as well as converting
+to and from \texttt{big.Int}.
 
-We try and structure the API in a similar way to \texttt{big.Int},
+We try to structure the API in a similar way to \texttt{big.Int},
 where an operation is performed on a separate
 \texttt{Nat} to receive the result.
 For example, this is the signature for
