@@ -42,14 +42,14 @@ software library to provide this functionality.
 
 Unfortunately, although Public Key cryptosystems have been heavily
 scrutinized in theory,
-implementations often suffer from vulnerabilities in practice
+implementations often suffer from vulnerabilities in practice.
 
 One important class of vulnerability are
 timing side-channels
 \cite{kocher_cryptanalysis_1995}.
 This is where an implementation leaks information
 about secret values through its execution time.
-Big Numbers libraries designed without cryptography in mind
+Big Number libraries designed without cryptography in mind
 suffer from these vulnerabilities.
 
 In particular, Go \cite{the_go_authors_go_nodate} provides a general purpose
@@ -553,14 +553,14 @@ $\varphi(N)$ is even as a consequence.
 
 Since moduli are stored without padding, we require a separate
 type, to not violate \texttt{Nat}'s contract around size.
-Moduli also have weaker constraints on information leakage,
+\texttt{Nat} also has stronger constraints on information leakage,
 so providing a separate type helps to avoid accidentally
 violating them.
 
 \subsection{Constant-Time Operations}
 
 The rules we established in our threat model \ref{threat_model}
-are quite stringent. For most operations, we need have conditional
+are quite stringent. For most operations, we need to have conditional
 behavior depending on the values we process. Without access
 to branching, this seems difficult.
 Thankfully, we can emulate branching
@@ -722,7 +722,7 @@ work of Thomas Pornin in BearSSL
 
 \subsubsection{Modular Reduction}
 
-To reduce a number $a$ modulo $m$, we first implement an operation
+To reduce a number modulo $m$, we first implement an operation
 that allows us to shift in a single limb. This
 lets us reduce a number
 of the form:
@@ -747,7 +747,7 @@ in the limbs of $x$ from most significant to least significant.
 
 Implementing the shifting operation needs
 the quotient $q := \lfloor z / m \rfloor$,
-in order to calculate $z - q m$.
+in order to calculate the remainder $z - q m$.
 Instead of calculating $q$ directly, we instead
 produce an estimate $\hat{q}$, by using the most significant
 $64$ bits of $m$ to divide the corresponding $128$ bits of $z$.
@@ -911,7 +911,7 @@ z.SetBytes(data)
 \end{minted}
 will clear \texttt{z}'s modulus, making it \texttt{nil}.
 
-We this pointer based strictly on what methods are called,
+We modify this pointer based strictly on what methods are called,
 never on the actual value of a result. The dynamic
 checks of this pointer only depend on the call-graph of our program.
 Since this graph is statically determined, these redundant reduction
@@ -1079,7 +1079,7 @@ algorithm, where the security flaws introduced
 by \texttt{big.Int} are not of major concern.
 
 This leaves RSA. Unfortunately, because RSA requires dynamic
-moduli, we need a big number library of some kind.
+moduli, we need a Big Number library of some kind.
 Ideally, this library would be internal to RSA, allowing constant-time
 operation, and severing the bridge between Go's cryptography
 package, and \texttt{big.Int}.
@@ -1098,7 +1098,7 @@ suffers only a 1.67x slowdown, while implementing encryption and
 decryption in constant-time.
 
 We hope to prepare a patch for Go's RSA implementation to merge
-this work soon.
+this work in soon.
 
 \section{Conclusion}
 
