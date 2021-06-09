@@ -67,7 +67,7 @@ Our library provides the necessary operations for Public Key cryptography,
 all while avoiding leakage through timing side-channels.
 To demonstrate its utility, we've modified Go's \texttt{go/crypto}
 package, replacing the use of \texttt{big.Int} in the DSA and RSA
-systems, achieving a slowdown of only 2x in this scenario.
+systems, achieving a slowdown of only 2x for the latter.
 
 \section{Background}
 
@@ -149,10 +149,18 @@ and verification all use \texttt{big.Int}.
 For ECC \cite{miller_use_1986}, Go defines a general interface
 for Elliptic Curves, requiring operations like point addition,
 scalar multiplication, etc. All of these are defined in terms
-of \texttt{big.Int}. Some of the curves have specialized
-implementations of their prime field, only converting from
-\texttt{big.Int} to satisfy this interface. The remaining curves
-directly use \texttt{big.Int} for their field arithmetic.
+of \texttt{big.Int}. Only \texttt{P384}
+uses \texttt{big.Int} for field arithmetic directly. The other
+curves instead convert \texttt{big.Int} to an internal
+type for their field elements,
+and perform their operations using that type instead. 
+These internal types vary a lot between these curves.
+\texttt{P224} uses hand-written operations in pure Go
+for its field,
+\texttt{P256} uses an optimized implementation in assembly,
+and \texttt{P521} uses field arithmetic generated
+by FiatCrypto
+\cite{hvass_high-assurance_nodate}.
 
 \subsection{Timing Attacks}
 
@@ -184,10 +192,10 @@ See \cite{ge_survey_2018} for a survey of these vulnerabilities.
 \subsubsection{Actual Attacks}
 
 Although the presence of a side-channel
-does not directly lead to attacks
-as early as 1995, Paul Kocher
+does not directly lead to attacks,
+Paul Kocher
 demonstrated the potential for timing side-channels to break
-crypto-systems
+crypto-systems as early as 1995
 \cite{kocher_cryptanalysis_1995, kocher_timing_1996}.
 These attacks relied on algorithms that perform a varying number of
 operations based on secret data. 
@@ -354,8 +362,9 @@ $m$ by multiplying by $r^{-1}$.
 While this effectively mitigates the simplest attacks
 against exponentiation, a very leaky operation,
 other methods are left unprotected, and may
-have subtle exploits. We also have
-the unaddressed issue of padding, which has lead to attacks
+have subtle exploits. For
+example, we there are fundamental issues with
+padding, which has lead to attacks
 in OpenSSL \cite{merget_raccoon_2019}.
 
 \section{Implementation}
@@ -423,8 +432,8 @@ Structuring our operations this way allows us to limit memory waste.
 \subsubsection{Handling Size}
 
 A \texttt{big.Int} always stores a value using as few limbs
-as possible. Its \textbf{true size}, the number of limbs
-necessary to store a value, always matches its \textbf{announced size},
+as possible. Its \textit{true size}, the number of limbs
+necessary to store a value, always matches its \textit{announced size},
 the number of limbs actually stored. When creating
 a \texttt{big.Int}, any padding is immediately stripped away,
 to satisfy this invariant.
@@ -815,6 +824,10 @@ so exponentiation is slower in that case.
 \subsubsection{Modular Square Roots}
 
 To calculate $\sqrt{z} \mod p$, we assume that $p$ is prime.
+Calculating square roots with a composite modulus is,
+in general, as hard
+as factoring it \cite{buhler_basic_2008}, which is why
+we only support prime moduli.
 Which algorithm we use depends on whether $p = 3 \mod 4$,
 or $p = 1 \mod 4$.
 
@@ -838,8 +851,8 @@ these choices.
 We store numbers in base
 $W := 2^{64}$. This means that we use the full width of a register
 to store each limb. Because of this, we say that are limbs
-are \textbf{saturated}. It's also possible to store
-limbs \textbf{unsaturated}, by using fewer than $64$ bits.
+are \textit{saturated}. It's also possible to store
+limbs \textit{unsaturated}, by using fewer than $64$ bits.
 BearSSL 
 \cite{pornin_bearssl_2020-1}
 takes this approach, using only $31$ bits of the available $32$ bits
@@ -1064,7 +1077,8 @@ to use a scratch buffer and a conditional copy.
 To gain similar speed to the other primitives, these new primitives
 would also need to be implemented in assembly. This would be time-consuming,
 but likely worth the effort. There are also new solutions
-to help with writing assembly routines in Go, such as the Avo library.
+to help with writing assembly routines in Go, such as the Avo library
+\cite{mcloughlin_mmcloughlinavo_2021}.
 
 \subsection{Upstreaming to \texttt{go/crypto}}
 
@@ -1084,8 +1098,9 @@ Ideally, this library would be internal to RSA, allowing constant-time
 operation, and severing the bridge between Go's cryptography
 package, and \texttt{big.Int}.
 
-As a proof of concept, we've implemented a fork of Go's RSA implementation
-\cite{meier_cronokirbyctrsa_nodate},
+We've
+submitted a patch \footnote{\url{https://go-review.googlesource.com/c/go/+/326012}}
+for Go's implementation of RSA,
 replacing \texttt{big.Int} with an internal number
 type,
 using the minimal amount of code
@@ -1093,12 +1108,10 @@ necessary to implement encryption and decryption.
 The public API, as well as key generation,
 still use \texttt{big.Int}.
 
-Using unsaturated limbs, we've found that our fork of RSA
-suffers only a 1.67x slowdown, while implementing encryption and
+Using unsaturated limbs, we've found that our version RSA
+suffers only a 1.7x slowdown, while implementing encryption and
 decryption in constant-time.
 
-We hope to prepare a patch for Go's RSA implementation to merge
-this work in soon.
 
 \section{Conclusion}
 

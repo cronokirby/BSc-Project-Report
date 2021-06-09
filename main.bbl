@@ -59,6 +59,11 @@ David Brumley and Dan Boneh.
   \href {https://doi.org/10.1016/j.comnet.2005.01.010}
   {\path{doi:10.1016/j.comnet.2005.01.010}}.
 
+\bibitem{buhler_basic_2008}
+Joe Buhler and Stan Wagon.
+\newblock Basic algorithms in number theory.
+\newblock page~44, 2008.
+
 \bibitem{cabrera_aldaya_cache-timing_2019}
 Alejandro Cabrera~Aldaya, Cesar Pereida~García, Luis~Manuel Alvarez~Tapia, and
   Billy~Bob Brumley.
@@ -132,10 +137,11 @@ Paul~C Kocher.
   {DSS}, and {Other} {Systems}.
 \newblock page~10, 1996.
 
-\bibitem{meier_cronokirbyctrsa_nodate}
-Lúcás~Críostóir Meier.
-\newblock cronokirby/ctrsa: {Trying} to make crypto/rsa constant-time.
-\newblock URL: \url{https://github.com/cronokirby/ctrsa}.
+\bibitem{mcloughlin_mmcloughlinavo_2021}
+Michael McLoughlin.
+\newblock mmcloughlin/avo, June 2021.
+\newblock original-date: 2018-11-04T17:44:21Z.
+\newblock URL: \url{https://github.com/mmcloughlin/avo}.
 
 \bibitem{meier_cronokirbyctcrypto_2021}
 Lúcás~Críostóir Meier.
