@@ -27,11 +27,12 @@
 
 \section{Introduction}
 
-As more activity takes place digitally, the importance of
+With the rise of the internet, and widespread
+digital services, the importance of
 secure communication has never been greater.
 Thankfully, after 50 years of Public Key cryptography
 \cite{hellman_overview_1978},
-we have good theoretical systems underpinning our security.
+we have good theoretical tools to provide this security.
 
 Most of these systems rely on modular arithmetic with large numbers.
 For example, RSA \cite{rivest_method_1978},
@@ -40,14 +41,15 @@ Working with these numbers is not natively supported by hardware.
 Instead, we use a \enquote{Big Number}
 software library to provide this functionality.
 
-Unfortunately, although Public Key cryptosystems have been heavily
+Unfortunately, although Public Key cryptosystems have been
+thoroughly
 scrutinized in theory,
 implementations often suffer from vulnerabilities in practice.
 
 One important class of vulnerability are
 timing side-channels
 \cite{kocher_cryptanalysis_1995}.
-This is where an implementation leaks information
+This is when an implementation leaks information
 about secret values through its execution time.
 Big Number libraries designed without cryptography in mind
 suffer from these vulnerabilities.
@@ -64,7 +66,7 @@ We've addressed this issue by creating a library
 \cite{meier_cronokirbysafenum_2021}
 providing Big Numbers with constant-time operations.
 Our library provides the necessary operations for Public Key cryptography,
-all while avoiding leakage through timing side-channels.
+while avoiding timing side-channels.
 To demonstrate its utility, we've modified Go's \texttt{go/crypto}
 package, replacing the use of \texttt{big.Int} in the DSA and RSA
 systems, achieving a slowdown of only 2x for the latter.
@@ -81,7 +83,7 @@ as well as what kind of vulnerabilities are present in Go's
 Most Public Key cryptosystems rely on
 modular arithmetic.
 
-In RSA \cite{rivest_method_1978}, for example, a public key $(e, N)$ consists
+In RSA \cite{rivest_method_1978}, a public key $(e, N)$ consists
 of a modulus
 $N \in \mathbb{N}$, usually 2048 bits long, and an exponent $e
 \in [0, \varphi(N) - 1]$.
@@ -92,7 +94,7 @@ $$
 
 Since $N$ is much larger than a register, 
 we need a Big Number library to implement this system.
-Modular exponentiation is also not supported in hardware,
+Modular exponentiation is also not implemented in hardware,
 requiring extra support in software.
 
 DSA
@@ -107,7 +109,7 @@ is usually either a prime field $\mathbb{Z}/p\mathbb{Z}$, in which case arithmet
 modulo $p$ is used, or a
 binary extension field $\text{GF}(2^n)$, in which case
 binary and polynomial arithmetic are used.
-For prime fields, a Big Number library necessary, because
+For prime fields, Big Number functionality is necessary, because
 the size of the prime is greater than 200 bits.
 
 \subsubsection{Implementing Big Numbers}
@@ -126,8 +128,8 @@ of modular arithmetic, as done by FiatCrypto
 
 In some systems, you need support for dynamic moduli.
 Take RSA, for example.
-In this case, you need a library supporting dynamically
-sized numbers, as well as various operations.
+In this case, you need a library that provides
+dynamically sized numbers.
 
 \subsubsection{Big Numbers in \texttt{go/crypto}}
 
@@ -168,17 +170,17 @@ A side-channel
 \cite{kelsey_side_1998}
 leaks secret information indirectly,
 through the observable effects of a program's execution.
-For example, timing side-channels use the execution time of a program
-to gain information about the secret data it handles. 
+Timing side-channels use the execution time of a program
+to infer information about secret data it handles. 
 A timing attack is the use of a timing side-channel to break the security
 of some program or cryptographic algorithm.
 
 When a program takes a different number of steps based on the value of some
 secret, this is an obvious timing side-channel.
-For example, if a naive program for comparing inputs with a secret password
-stops as soon as a mismatch is found, then the algorithm itself has
-a timing side-channel. This side-channel can be exploited, to allow
-the secret password to be guessed byte-by-byte.
+For example, a naive algorithm for comparing inputs with a secret password
+might stop as soon as a mismatch is found. This algorithm has
+an inherent timing side-channel. This side-channel can be exploited,
+allowing the secret password to be guessed byte-by-byte.
 
 Not all timing side-channels are this simple. Algorithms
 that always take the same number of steps
@@ -215,9 +217,9 @@ of the cache.
 If data accesses depend on a secret value, the observed execution
 time will also depend on this value. Additionally,
 an attacker located on the same machine
-can place data into the cache, and probe
-the cache themselves, to learn more precise information about the
-program's access patterns. This kind of colocation increasingly common,
+can place data into the cache and probe it themselves,
+learning more precise information about the
+program's access patterns. This kind of colocation is increasingly common,
 as more applications are run on cloud servers.
 
 A wide variety of attacks involving caches have been mounted
@@ -226,13 +228,13 @@ against various cryptosystems
   bernstein_cache-timing_2005,
   yarom_cachebleed_2017,
   cabrera_aldaya_cache-timing_2019}
-; accessing data based on secret values should
+: accessing data based on secret values should
 be avoided in cryptographic code.
 
 \subsubsection{Our Threat-Model}
 \label{threat_model}
 
-We can distill this variety of side-channels into a simple,
+These side-channels can be distilled into a simple,
 albeit pessimistic, set of rules:
 
 \begin{enumerate}
@@ -254,8 +256,8 @@ Rule 2 is justified by various cache based side-channels and attacks
   bernstein_cache-timing_2005,
   yarom_cachebleed_2017,
   cabrera_aldaya_cache-timing_2019}.
-Since caches only load information an entire line at a time, it might
-seem that our rule is too pessimistic, and that only which cache line
+Since caches only load information an entire line at a time,
+this rule may seem too pessimistic. Perhaps only which cache line
 was accessed should be kept secret \cite{brickell_technologies_2011}.
 Unfortunately, it's possible to perform
 attacks on a much finer level
@@ -269,7 +271,7 @@ that accesses leak their exact address.
 
 Rule 3 is justified in two ways. First, if different branches of a conditional
 statement execute a different number of operations,
-we can easily observe which branch was taken. Second, even if both
+we can inherently observe which branch was taken. Second, even if both
 branches execute identitical operations, the CPU's branch predictor
 can be exploited to leak information about which branch was taken
 \cite{
@@ -277,7 +279,9 @@ can be exploited to leak information about which branch was taken
   aciicmez_power_2007,
   evtyushkin_jump_2016}.
 
-In addition to these rules, we assume that addition, multiplication,
+In addition to these rules,
+we need a basic set of trusted operations to build our programs.
+We assume that addition, multiplication,
 logical operations, and shifts, as implemented in hardware,
 are constant-time in their inputs.
 This is the case on most processors, one notable exception being
@@ -289,8 +293,7 @@ for the platforms targeted by Go and our library.
 
 Go provides a general purpose type for Big Numbers: \texttt{big.Int}.
 This type focuses on being optimized, and useful in various
-situations. It does not focus on security, or on protecting
-against timing side-channels.
+situations. It does not focus on protecting against timing side-channels.
 Unfortunately, out of convenience,
 and for lack of better alternatives, it gets used in
 cryptography, even inside of Go's standard library.
@@ -309,9 +312,9 @@ By discarding them, operations on
 this number will have fewer limbs to process, and will be faster.
 
 Unfortunately, this means that \texttt{big.Int} pervasively leaks information
-about the padding of numbers. Since every operation on
-a number takes more time the more limbs the number uses,
-every operation leaks the padding of numbers.
+about the padding of numbers. Operations
+take more time when a number has more limbs,
+thus leaking the padding of numbers.
 This has been exploited
 in OpenSSL \cite{merget_raccoon_2019}, and might potentially
 be a vulnerability in Go's cryptography library.
@@ -371,8 +374,8 @@ in OpenSSL \cite{merget_raccoon_2019}.
 
 We've implemented a library, called
 \texttt{safenum} \cite{meier_cronokirbysafenum_2021}, intended to provide
-a replacement for \texttt{big.Int}, suitable for use in cryptography.
-In order to demonstrate its utility, we've replaced some
+a replacement for \texttt{big.Int}, suitable for cryptography.
+To test its utility, we've replaced some
 of \texttt{go/crypto}'s usage of \texttt{big.Int} with our own library,
 in a separate repository
 \cite{meier_cronokirbyctcrypto_2021}.
@@ -413,7 +416,7 @@ to and from \texttt{big.Int}.
 
 We try to structure the API in a similar way to \texttt{big.Int},
 where an operation is performed on a separate
-\texttt{Nat} to receive the result.
+\texttt{Nat} receiving the result.
 For example, this is the signature for
 modular addition:
 
@@ -425,9 +428,9 @@ This calculates $z \leftarrow x + y \mod m$, returning $z$. The advantage
 of structuring the API this way, instead of simply returning a new
 value, is that we can reuse the memory of $z$ for the result.
 
-We go one step further, in fact, and use the memory of the buffer
+We go one step further, in fact, and use the memory of the receiving
 \texttt{Nat} for all scratch space needed inside of an operation.
-Structuring our operations this way allows us to limit memory waste.
+Structuring our operations this way limits memory waste.
 
 \subsubsection{Handling Size}
 
@@ -509,11 +512,12 @@ In our library, we use a different type for
 the moduli used in modular arithmetic: \texttt{Modulus}. There are several
 reasons for doing this.
 
-First, various modular operations use certain properties
+First, some modular operations use certain properties
 of the modulus which can be pre-computed. For example, montgomery multiplication
 uses $m^{-1} \mod W$, with $W$ our base.
 Using a separate type for moduli lets us avoid
-recomputing these properties.
+recomputing these properties, by storing them alongside
+the value of our modulus.
 
 Second, we allow the true size of a modulus to be leaked.
 Moduli are stored \emph{without} padding.
@@ -525,9 +529,10 @@ through modular operations is as tight as possible, making
 every operation faster.
 
 This assumption is safe in cryptography. Moduli are often public,
-like with the public modulus $N$ in RSA. In this case, leaking
-the true size is fine: even the exact value is known. There
-are other cases where a secret modulus is necessary.
+like with the public modulus $N$ in RSA. Since the exact value
+is known, leaking the true size is fine.
+There
+are other cases where a private modulus is necessary.
 Even then, the true size of that modulus remains known. For example,
 when generating an RSA key, we know the factorization $N = pq$ of the modulus,
 and calculate our private key modulo $\varphi(N) = (p - 1)(q - 1)$:
@@ -555,13 +560,13 @@ information in the process.
 Fortunately, we're not
 aware of any realistic situation where the evennness of a
 modulus needs to be kept secret. In fact, for the cryptographic
-algorithms we know of, the evenness of the modulus used
-is known statically, making this check perfectly fine.
+algorithms we know of, the evenness of a modulus 
+is known statically, making this check fine.
 In RSA, for example, the modulus $N$ is odd by construction, and
 $\varphi(N)$ is even as a consequence.
 
 Since moduli are stored without padding, we require a separate
-type, to not violate \texttt{Nat}'s contract around size.
+type to not violate \texttt{Nat}'s contract around size.
 \texttt{Nat} also has stronger constraints on information leakage,
 so providing a separate type helps to avoid accidentally
 violating them.
@@ -591,9 +596,9 @@ func (z *Nat) ModSub(x *Nat, y *Nat, m *Modulus) *Nat {
 }
 \end{minted}
 
-The problem here is that by conditionally adding in $m$, we reveal
+The problem is that by conditionally adding in $m$, we reveal
 whether or not $y > x$, and a borrow occurred. Our solution
-requires a new primitive:
+uses a new primitive:
 
 \begin{minted}{Go}
 func (z *Nat) ctCondCopy(v choice, y *Nat) *Nat
@@ -717,7 +722,7 @@ func cmpEq(x []Word, y []Word) choice {
 Two slices are equal when each of their limbs match.
 Since we can't exit early without leaking information
 about \texttt{x} and \texttt{y}, we implement this formula
-using logical operators, without any short-circuiting.
+using bitwise operators, without any short-circuiting.
 
 \subsection{Algorithm Choices}
 
@@ -759,7 +764,7 @@ the quotient $q := \lfloor z / m \rfloor$,
 in order to calculate the remainder $z - q m$.
 Instead of calculating $q$ directly, we instead
 produce an estimate $\hat{q}$, by using the most significant
-$64$ bits of $m$ to divide the corresponding $128$ bits of $z$.
+$64$ bits of $m$ to divide $128$ corresponding bits of $z$.
 This estimate satisfies $\hat{q} = q \pm 1$, so we then
 conditionally add and subtract $m$ to correct
 for this error.
@@ -865,7 +870,7 @@ First, this leaves an extra bit of space to hold a carry
 or borrow after an addition or subtraction. This allows
 us to chain together carries to implement operations over multiple
 limbs, without having to use assembly instructions. In Go,
-this isn't concern, since \texttt{bits.Add} and
+this isn't a concern, since \texttt{bits.Add} and
 \texttt{bits.Sub} can be used to implement these intrinsics
 in a cross-platform way.
 
@@ -913,7 +918,7 @@ indicating that it has been reduced by this modulus.
 When we reduce a number modulo $m$, we check this pointer,
 and skip the reduction if it matches $m$. If we modify
 the value of a number, we update the modulus it points to
-accordingly, based on what method was called.
+accordingly.
 For example:
 \begin{minted}{Go}
 z.ModAdd(x, y, m)
@@ -925,8 +930,9 @@ z.SetBytes(data)
 will clear \texttt{z}'s modulus, making it \texttt{nil}.
 
 We modify this pointer based strictly on what methods are called,
-never on the actual value of a result. The dynamic
-checks of this pointer only depend on the call-graph of our program.
+never on the actual value of a result. Thus, the dynamic
+checks of this pointer
+only depend on the call-graph of our program.
 Since this graph is statically determined, these redundant reduction
 checks don't impact the constant-time properties of our library.
 
@@ -1003,7 +1009,7 @@ expect the ratio to be similar to the other case.
 
 We've created a forked package
 \cite{meier_cronokirbyctcrypto_2021}
-of \texttt{go/crypto}, where we've replaced the usage of \texttt{big.Int}
+of \texttt{go/crypto}, where we've replaced \texttt{big.Int}
 with our own \texttt{Nat} type for both RSA and DSA. All of the code
 using \texttt{big.Int} has been replaced, with the exception of
 primality checking. This demonstrates the utility of
@@ -1108,10 +1114,9 @@ necessary to implement encryption and decryption.
 The public API, as well as key generation,
 still use \texttt{big.Int}.
 
-Using unsaturated limbs, we've found that our version RSA
+Using unsaturated limbs, we've found that our version of RSA
 suffers only a 1.7x slowdown, while implementing encryption and
 decryption in constant-time.
-
 
 \section{Conclusion}
 
